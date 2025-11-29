@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Children's Story Book Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Children's Story Book Generator</h1>
+            <p>Create magical stories for children aged 3-6 with AI.</p>
+        </header>
+
+        <main>
+            <div class="wizard-container">
+                <!-- Progress Stepper -->
+                <div class="stepper">
+                    <div class="step active" data-step="1">1. Setup</div>
+                    <div class="step" data-step="2">2. Hero</div>
+                    <div class="step" data-step="3">3. Sidekick</div>
+                    <div class="step" data-step="4">4. Mission</div>
+                    <div class="step" data-step="5">5. Setting</div>
+                    <div class="step" data-step="6">6. Style</div>
+                </div>
+
+                <!-- Wizard Content -->
+                <div id="wizardContent" class="wizard-content">
+                    <!-- Dynamic content injected by JS -->
+                </div>
+
+                <!-- Navigation -->
+                <div class="wizard-nav">
+                    <button id="backBtn" class="secondary-btn hidden" onclick="prevStep()">Back</button>
+                    <button id="nextBtn" class="primary-btn" onclick="nextStep()">Next</button>
+                    <button id="generateBtn" class="primary-btn hidden" onclick="startGeneration()">
+                        <span class="icon">✨</span> Create Story
+                    </button>
+                </div>
+
+                <!-- Hidden inputs for legacy compatibility if needed, or state is managed in JS -->
+                <div id="status" class="status-badge hidden">Ready</div>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progressContainer" class="progress-container hidden">
+                <h2>Creating Your Story...</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p id="logMessage" class="log-message">Initializing...</p>
+            </div>
+
+            <!-- Book Viewer -->
+            <div id="bookContainer" class="book-container hidden">
+                <div class="book-viewer">
+                    <button id="prevBtn" class="nav-btn" onclick="prevPage()">◀</button>
+                    <div id="currentPageContainer" class="page-display">
+                        <!-- Page image will be inserted here -->
+                    </div>
+                    <button id="nextBtn" class="nav-btn" onclick="nextPage()">▶</button>
+                </div>
+                <div class="page-indicator">
+                    Page <span id="pageNum">1</span> of <span id="totalPages">8</span>
+                </div>
+                <button class="start-over-btn" onclick="startOver()">✨ Create Another Story</button>
+            </div>
+
+            <!-- Download Section -->
+            <div id="downloadSection" class="download-section hidden">
+                <a href="/output/story.pdf" target="_blank" class="download-btn">
+                    Download PDF Book 📥
+                </a>
+                <button onclick="archiveStory()" class="secondary-btn">
+                    Save to Archive 💾
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}?v=2"></script>
+</body>
+
+</html>
