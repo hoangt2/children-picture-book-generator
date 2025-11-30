@@ -56,7 +56,9 @@ def start_generation():
 
 @app.route('/api/status')
 def get_status():
-    return jsonify(generation_state)
+    # Import STATUS from story_generator to get real-time updates
+    from story_generator import STATUS
+    return jsonify({"status": STATUS, "is_generating": generation_state["is_generating"]})
 
 @app.route('/api/story')
 def get_story():

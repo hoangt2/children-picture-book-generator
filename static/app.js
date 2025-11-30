@@ -118,12 +118,12 @@ let wizardState = {
     hero: {
         type: 'human',
         details: {
-            name: 'Alex',
+            name: 'Linh',
             gender: 'Boy',
-            race: 'White/Caucasian',
-            skinTone: 'Light',
+            race: 'Asian',
+            skinTone: 'Tan',
             hairStyle: 'Short & Straight',
-            hairColor: 'Brown',
+            hairColor: 'Black',
             accessories: 'None'
         }
     },
@@ -501,24 +501,59 @@ function startGeneration() {
 function pollStatus() {
     const logMessage = document.getElementById('logMessage');
     const progressFill = document.querySelector('.progress-fill');
+    const totalPages = 8; // Total number of pages in a story
+
+    console.log("pollStatus() called");
 
     const interval = setInterval(() => {
+        console.log("Polling status from /api/status...");
         fetch('/api/status')
             .then(response => response.json())
             .then(data => {
                 console.log("Status update:", data.status); // Debug log
-                logMessage.innerText = data.status;
 
-                // Fake progress based on status keywords
-                let percent = 10;
-                if (data.status.includes("Processing Page")) {
-                    // Extract page number if possible, or just increment
-                    percent = 30 + (Math.random() * 40);
-                } else if (data.status.includes("Compiling")) {
-                    percent = 90;
+                let percent = 0;
+                let displayMessage = data.status;
+
+                // Parse status and calculate progress
+                if (data.status.includes("Starting") || data.status.includes("starting")) {
+                    percent = 5;
+                    displayMessage = "Starting story generation...";
+                } else if (data.status.includes("story concept") || data.status.includes("Generating story")) {
+                    percent = 10;
+                    displayMessage = "Creating story concept...";
+                } else if (data.status.includes("Processing character") || data.status.includes("character")) {
+                    percent = 15;
+                    displayMessage = "Generating character models...";
+                } else if (data.status.toLowerCase().includes("page")) {
+                    // Extract page number from status message (case insensitive)
+                    const match = data.status.match(/page (\d+)/i);
+                    if (match) {
+                        const pageNum = parseInt(match[1]);
+                        // Calculate progress: 20% for setup, 70% for pages (8.75% per page), 10% for PDF
+                        percent = 20 + ((pageNum) / totalPages) * 70;
+                        displayMessage = `Creating page ${pageNum}/${totalPages}...`;
+                    } else {
+                        percent = 30;
+                    }
+                } else if (data.status.includes("Verifying") || data.status.includes("verifying")) {
+                    percent = 92;
+                    displayMessage = "Verifying all pages...";
+                } else if (data.status.includes("Compiling") || data.status.includes("PDF")) {
+                    percent = 95;
+                    displayMessage = "Compiling PDF...";
                 } else if (data.status === "Complete") {
                     percent = 100;
+                    displayMessage = "Complete!";
+                } else {
+                    // Fallback for unmatched statuses
+                    console.warn("Unmatched status:", data.status);
+                    percent = 5;
+                    displayMessage = data.status;
                 }
+
+                console.log("Setting progress:", percent + "%", displayMessage);
+                logMessage.innerText = displayMessage;
                 progressFill.style.width = percent + '%';
 
                 if (data.status === "Complete" || data.status.startsWith("Error")) {
