@@ -88,8 +88,9 @@ def get_age_constraints(age):
 
 def get_story_prompt(target_language, age, story_params):
     
-    # Get age-appropriate constraints
-    constraints = get_age_constraints(age)
+    # Get age-appropriate constraints (Age + 3 for reading level)
+    reading_age = age + 3
+    constraints = get_age_constraints(reading_age)
     
     # Extract details from story_params
     hero = story_params.get('hero', {})
@@ -99,19 +100,26 @@ def get_story_prompt(target_language, age, story_params):
     
     # Construct Hero Description
     hero_desc = ""
+    hero_name = ""
     if hero.get('type') == 'human':
         d = hero.get('details', {})
+        hero_name = d.get('name', '')
         gender = d.get('gender', 'child').lower()
         race = d.get('race', '')
         race_desc = f"{race} " if race else ""
         hero_desc = f"a {age}-year-old {race_desc}{gender} with {d.get('skinTone', 'medium')} skin, {d.get('hairColor', 'brown')} {d.get('hairStyle', 'short')} hair"
         if d.get('accessories') and d.get('accessories') != 'None':
             hero_desc += f", wearing {d.get('accessories')}"
+        if hero_name:
+            hero_desc = f"{hero_name}, {hero_desc}"
     else:
         # Animal
         d = hero.get('details', {})
+        hero_name = d.get('name', '')
         animal_type = d.get('animal', 'animal')
         hero_desc = f"a cute {animal_type}"
+        if hero_name:
+            hero_desc = f"{hero_name}, {hero_desc}"
 
     # Construct Sidekick Description
     sidekick_desc = ""
@@ -141,7 +149,7 @@ Your goal is to generate a heartwarming, simple, and engaging story.
 
 **CULTURAL RELEVANCE (VERY IMPORTANT):**
 - **Characters:** Should reflect the culture of people who speak {target_language}, but strictly follow the configured Hero and Setting above.
-- **Names:** Use culturally appropriate names for the target language.
+- **Names:** {"Use the hero name: " + hero_name if hero_name else "Use culturally appropriate names for the target language."}
 - **Setting:** Use the configured setting: {setting_prompt}
 - **Cultural Elements:** Include subtle cultural elements (food, traditions, clothing) when natural to the story.
 

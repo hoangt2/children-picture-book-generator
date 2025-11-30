@@ -115,28 +115,49 @@ const bookConfigOptions = {
 // State Management
 let currentStep = 1;
 let wizardState = {
-    hero: { type: 'human', details: {} },
-    sidekick: null,
-    theme: null,
-    setting: null,
-    style: null,
-    language: 'English',
-    age: 3
+    hero: {
+        type: 'human',
+        details: {
+            name: 'Alex',
+            gender: 'Boy',
+            race: 'White/Caucasian',
+            skinTone: 'Light',
+            hairStyle: 'Short & Straight',
+            hairColor: 'Brown',
+            accessories: 'None'
+        }
+    },
+    sidekick: bookConfigOptions.sidekick.find(s => s.id === 'pet_dog'),
+    theme: bookConfigOptions.themes[0].options.find(t => t.id === 'bravery'),
+    setting: bookConfigOptions.settings.find(s => s.id === 'forest'),
+    // Default to watercolor style (no longer selectable by user)
+    style: {
+        id: 'watercolor',
+        label: 'Soft Watercolor',
+        imageGenPrompt: 'childrens book illustration, soft watercolor style, pastel colors, white background, dreamy texture'
+    },
+    language: 'Vietnamese',
+    age: 6
 };
 
 let isGenerating = false;
 let currentStory = null;
 let currentPageIndex = 0;
+let storyArchived = false; // Track if current story has been archived
+
+// Warn user before leaving page if story is not saved
+window.addEventListener('beforeunload', (e) => {
+    // Only warn if there's a story displayed and it hasn't been archived
+    if (currentStory && !storyArchived) {
+        e.preventDefault();
+        e.returnValue = ''; // Modern browsers require this
+        return ''; // Some browsers show this message
+    }
+});
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     renderStep(1);
-
-    // Load existing story if available
-    fetch('/api/story')
-        .then(response => {
-            if (response.ok) loadStory();
-        });
 });
 
 function renderStep(step) {
@@ -148,10 +169,10 @@ function renderStep(step) {
         el.classList.toggle('active', parseInt(el.dataset.step) === step);
     });
 
-    // Update buttons
+    // Update buttons (step 5 is now the final step)
     document.getElementById('backBtn').classList.toggle('hidden', step === 1);
-    document.getElementById('nextBtn').classList.toggle('hidden', step === 6);
-    document.getElementById('generateBtn').classList.toggle('hidden', step !== 6);
+    document.getElementById('nextBtn').classList.toggle('hidden', step === 5);
+    document.getElementById('generateBtn').classList.toggle('hidden', step !== 5);
 
     switch (step) {
         case 1: renderSetupStep(content); break;
@@ -159,12 +180,11 @@ function renderStep(step) {
         case 3: renderSidekickStep(content); break;
         case 4: renderMissionStep(content); break;
         case 5: renderSettingStep(content); break;
-        case 6: renderStyleStep(content); break;
     }
 }
 
 function nextStep() {
-    if (currentStep < 6) {
+    if (currentStep < 5) {
         currentStep++;
         renderStep(currentStep);
     }
@@ -193,20 +213,20 @@ function renderSetupStep(container) {
         <div class="form-group">
             <label>Child's Age</label>
             <select id="ageSelect">
-                ${[...Array(13).keys()].map(i => `<option value="${i}" ${i === 3 ? 'selected' : ''}>${i} years old</option>`).join('')}
+                ${[...Array(13).keys()].map(i => `<option value="${i}" ${i === wizardState.age ? 'selected' : ''}>${i} years old</option>`).join('')}
             </select>
         </div>
         <div class="form-group">
             <label>Language</label>
             <select id="languageSelect">
-                <option value="English">English 🇬🇧</option>
-                <option value="Vietnamese">Vietnamese 🇻🇳</option>
-                <option value="Finnish">Finnish 🇫🇮</option>
-                <option value="Spanish">Spanish 🇪🇸</option>
-                <option value="French">French 🇫🇷</option>
-                <option value="German">German 🇩🇪</option>
-                <option value="Italian">Italian 🇮🇹</option>
-                <option value="Swedish">Swedish 🇸🇪</option>
+                <option value="English" ${wizardState.language === 'English' ? 'selected' : ''}>English 🇬🇧</option>
+                <option value="Vietnamese" ${wizardState.language === 'Vietnamese' ? 'selected' : ''}>Vietnamese 🇻🇳</option>
+                <option value="Finnish" ${wizardState.language === 'Finnish' ? 'selected' : ''}>Finnish 🇫🇮</option>
+                <option value="Spanish" ${wizardState.language === 'Spanish' ? 'selected' : ''}>Spanish 🇪🇸</option>
+                <option value="French" ${wizardState.language === 'French' ? 'selected' : ''}>French 🇫🇷</option>
+                <option value="German" ${wizardState.language === 'German' ? 'selected' : ''}>German 🇩🇪</option>
+                <option value="Italian" ${wizardState.language === 'Italian' ? 'selected' : ''}>Italian 🇮🇹</option>
+                <option value="Swedish" ${wizardState.language === 'Swedish' ? 'selected' : ''}>Swedish 🇸🇪</option>
             </select>
         </div>
     `;
@@ -245,8 +265,25 @@ function renderHeroStep(container) {
     const detailsContainer = document.createElement('div');
     detailsContainer.style.marginTop = '2rem';
 
+    // Helper to create text input
+    const createTextInput = (label, key, placeholder = '') => {
+        const group = document.createElement('div');
+        group.className = 'form-group';
+        group.innerHTML = `<label>${label}</label>`;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = placeholder;
+        input.value = wizardState.hero.details[key] || '';
+        input.onchange = (e) => wizardState.hero.details[key] = e.target.value;
+        group.appendChild(input);
+        return group;
+    };
+
     if (wizardState.hero.type === 'human') {
         detailsContainer.innerHTML = '<h3>Customize Appearance</h3>';
+
+        // Add name input first
+        detailsContainer.appendChild(createTextInput('Hero Name', 'name', 'e.g., Emma, Liam, etc.'));
 
         // Helper to create dropdowns
         const createSelect = (label, options, key) => {
@@ -278,6 +315,11 @@ function renderHeroStep(container) {
 
     } else {
         detailsContainer.innerHTML = '<h3>Choose Animal</h3>';
+
+        // Add name input first
+        const nameInput = createTextInput('Hero Name', 'name', 'e.g., Benny, Luna, etc.');
+        detailsContainer.appendChild(nameInput);
+
         const animalGrid = document.createElement('div');
         animalGrid.className = 'options-grid';
 
@@ -410,14 +452,13 @@ function createOptionCard(label, desc, isSelected, onClick) {
 function startGeneration() {
     if (isGenerating) return;
 
-    // Validation
-    if (!wizardState.theme || !wizardState.setting || !wizardState.style) {
+    // Validation (style is now set by default)
+    if (!wizardState.theme || !wizardState.setting) {
         alert("Please complete all steps!");
         return;
     }
 
     const btn = document.getElementById('generateBtn');
-    const status = document.getElementById('status');
     const progress = document.getElementById('progressContainer');
     const bookContainer = document.getElementById('bookContainer');
     const wizardContainer = document.querySelector('.wizard-container');
@@ -425,7 +466,6 @@ function startGeneration() {
 
     btn.disabled = true;
     isGenerating = true;
-    status.classList.remove('hidden');
     progress.classList.remove('hidden');
     bookContainer.classList.add('hidden');
     downloadSection.classList.add('hidden');
@@ -438,7 +478,8 @@ function startGeneration() {
         sidekick: wizardState.sidekick,
         theme: wizardState.theme,
         setting: wizardState.setting,
-        style: wizardState.style
+        style: wizardState.style,
+        test_mode: document.getElementById('testModeToggle').checked
     };
 
     fetch('/api/generate', {
@@ -458,7 +499,6 @@ function startGeneration() {
 }
 
 function pollStatus() {
-    const statusText = document.getElementById('status');
     const logMessage = document.getElementById('logMessage');
     const progressFill = document.querySelector('.progress-fill');
 
@@ -467,7 +507,6 @@ function pollStatus() {
             .then(response => response.json())
             .then(data => {
                 console.log("Status update:", data.status); // Debug log
-                statusText.innerText = data.status;
                 logMessage.innerText = data.status;
 
                 // Fake progress based on status keywords
@@ -507,6 +546,7 @@ function loadStory() {
             console.log("Story loaded:", story);
             currentStory = story;
             currentPageIndex = 0;
+            storyArchived = false; // Reset flag for new story
 
             const container = document.getElementById('bookContainer');
             if (!container) {
@@ -584,6 +624,7 @@ function archiveStory() {
             if (data.error) {
                 alert('Error archiving story: ' + data.error);
             } else {
+                storyArchived = true; // Mark story as archived
                 alert('Story saved to archive!');
             }
         })
@@ -602,6 +643,10 @@ function startOver() {
     document.querySelector('.wizard-container').classList.remove('hidden');
     currentStep = 1;
     renderStep(1);
+
+    // Reset story state
+    currentStory = null;
+    storyArchived = false;
 
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });

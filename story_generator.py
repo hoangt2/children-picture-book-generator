@@ -298,6 +298,71 @@ def process_story(story, output_dir="output", status_callback=None):
     log("All done! PDF created.")
 
 
+def generate_mock_story(story_prompt):
+    """Generates a mock story for testing purposes without AI."""
+    update_status("Starting MOCK story generation...")
+    
+    output_dir = "output"
+    cleanup(output_dir)
+    
+    # Create directories
+    dirs = {
+        "root": output_dir,
+        "images": os.path.join(output_dir, "images"),
+        "cards": os.path.join(output_dir, "cards"),
+        "data": os.path.join(output_dir, "data")
+    }
+    for d in dirs.values():
+        os.makedirs(d, exist_ok=True)
+
+    # Mock Story Data
+    story = {
+        "title_target": "The Mock Adventure",
+        "characters": [{"name": "Mock Hero", "description": "A test hero"}],
+        "pages": []
+    }
+    
+    for i in range(1, 9):
+        story["pages"].append({
+            "page_number": i,
+            "type": "story",
+            "text_target": f"This is page {i} of the mock story. It is generated for testing purposes.",
+            "image_description": f"Mock image for page {i}"
+        })
+
+    # Save JSON
+    with open(os.path.join(dirs["data"], "story.json"), "w", encoding="utf-8") as f:
+        json.dump(story, f, indent=2, ensure_ascii=False)
+
+    # Generate Mock Images and Cards
+    from PIL import Image, ImageDraw, ImageFont
+    
+    for page in story["pages"]:
+        page_num = page["page_number"]
+        update_status(f"Generating mock page {page_num}...")
+        
+        # Create mock image
+        img = Image.new('RGB', (1024, 1024), color = (100 + page_num * 10, 150, 200))
+        d = ImageDraw.Draw(img)
+        d.text((50, 500), f"Mock Image {page_num}", fill=(255, 255, 255))
+        
+        image_path = os.path.join(dirs["images"], f"page_{page_num}.png")
+        img.save(image_path)
+        
+        # Create card
+        final_path = os.path.join(dirs["cards"], f"story_card_{page_num}.png")
+        create_story_card(image_path, page["text_target"], final_path)
+        
+        time.sleep(0.2) # Simulate slight delay
+
+    # Compile PDF
+    update_status("Compiling PDF...")
+    from pdf_generator import compile_to_pdf
+    pdf_path = os.path.join(dirs["root"], "story.pdf")
+    compile_to_pdf(dirs["cards"], pdf_path)
+    
+    update_status("Complete")
+
 
 if __name__ == "__main__":
     main()

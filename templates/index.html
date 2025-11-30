@@ -14,6 +14,13 @@
         <header>
             <h1>Children's Story Book Generator</h1>
             <p>Create magical stories for children aged 3-6 with AI.</p>
+            <div class="header-controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="testModeToggle">
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Test Mode</span>
+            </div>
         </header>
 
         <main>
@@ -25,7 +32,6 @@
                     <div class="step" data-step="3">3. Sidekick</div>
                     <div class="step" data-step="4">4. Mission</div>
                     <div class="step" data-step="5">5. Setting</div>
-                    <div class="step" data-step="6">6. Style</div>
                 </div>
 
                 <!-- Wizard Content -->
@@ -41,9 +47,6 @@
                         <span class="icon">✨</span> Create Story
                     </button>
                 </div>
-
-                <!-- Hidden inputs for legacy compatibility if needed, or state is managed in JS -->
-                <div id="status" class="status-badge hidden">Ready</div>
             </div>
 
             <!-- Progress Section -->
@@ -82,7 +85,7 @@
         </main>
     </div>
 
-    <script src="{{ url_for('static', filename='app.js') }}?v=2"></script>
+    <script src="{{ url_for('static', filename='app.js') }}?v=3"></script>
 </body>
 
 </html>

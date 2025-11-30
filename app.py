@@ -3,7 +3,7 @@ import threading
 import os
 import json
 import time
-from story_generator import main as generate_story
+from story_generator import main as generate_story, generate_mock_story
 
 app = Flask(__name__)
 
@@ -22,8 +22,13 @@ def run_generation(story_prompt):
     generation_state["logs"] = []
 
     try:
-        # Pass the story_prompt to the generator
-        generate_story(story_prompt)
+        # Check for test mode
+        if story_prompt.get("test_mode"):
+            generate_mock_story(story_prompt)
+        else:
+            # Pass the story_prompt to the generator
+            generate_story(story_prompt)
+        
         generation_state["status"] = "Complete"
     except Exception as e:
         generation_state["status"] = f"Error: {str(e)}"
