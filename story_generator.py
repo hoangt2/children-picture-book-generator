@@ -358,6 +358,78 @@ def generate_mock_story(story_prompt):
     # Compile PDF
     update_status("Compiling PDF...")
     from pdf_generator import compile_to_pdf
+    compile_to_pdf(dirs["cards"], os.path.join(dirs["root"], "story.pdf"))
+    
+    update_status("Complete")
+
+def regenerate_page(page_number, output_dir="output"):
+    """Regenerates the image and card for a specific page."""
+    print(f"Regenerating page {page_number}...")
+    
+    # Load story data
+    data_path = os.path.join(output_dir, "data", "story.json")
+    if not os.path.exists(data_path):
+        print("Story data not found.")
+        return False
+        
+    with open(data_path, "r", encoding="utf-8") as f:
+        story = json.load(f)
+        
+    # Find the page
+    target_page = None
+    for page in story.get("pages", []):
+        if page.get("page_number") == page_number:
+            target_page = page
+            break
+            
+    if not target_page:
+        print(f"Page {page_number} not found.")
+        return False
+        
+    # Reconstruct character model paths
+    dirs = {
+        "images": os.path.join(output_dir, "images"),
+        "cards": os.path.join(output_dir, "cards"),
+        "root": output_dir
+    }
+    
+    characters = story.get("characters", [])
+    if not characters:
+        desc = story.get("character_description")
+        if desc:
+            characters.append({"name": "Main", "description": desc})
+            
+    all_model_paths = []
+    all_char_desc = " ".join([c.get("description", "") for c in characters])
+    
+    for char in characters:
+        name = char.get("name", "Unknown")
+        safe_name = "".join(x for x in name if x.isalnum())
+        model_path = os.path.join(dirs["images"], f"character_model_{safe_name}.png")
+        if os.path.exists(model_path):
+            all_model_paths.append(model_path)
+            
+    # Regenerate Image
+    image_filename = f"page_{page_number}.png"
+    image_path = os.path.join(dirs["images"], image_filename)
+    final_filename = f"story_card_{page_number}.png"
+    final_path = os.path.join(dirs["cards"], final_filename)
+    
+    full_prompt = f"{target_page.get('image_description')}"
+    
+    # Use existing generate_image function
+    success = generate_image(full_prompt, image_path, character_description=all_char_desc, reference_image_paths=all_model_paths)
+    
+    if success:
+        # Create story card
+        create_story_card(image_path, target_page.get("text_target"), final_path)
+        
+        # Recompile PDF
+        from pdf_generator import compile_to_pdf
+        compile_to_pdf(dirs["cards"], os.path.join(dirs["root"], "story.pdf"))
+        return True
+        
+    return False
     pdf_path = os.path.join(dirs["root"], "story.pdf")
     compile_to_pdf(dirs["cards"], pdf_path)
     

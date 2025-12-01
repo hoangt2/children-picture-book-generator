@@ -3,7 +3,7 @@ import threading
 import os
 import json
 import time
-from story_generator import main as generate_story, generate_mock_story
+from story_generator import main as generate_story, generate_mock_story, regenerate_page
 
 app = Flask(__name__)
 
@@ -69,6 +69,23 @@ def get_story():
         return jsonify(data)
     except FileNotFoundError:
         return jsonify({"error": "No story found"}), 404
+
+@app.route('/api/regenerate_page', methods=['POST'])
+def regenerate_page_endpoint():
+    data = request.get_json()
+    page_number = data.get('page_number')
+    
+    if not page_number:
+        return jsonify({"error": "Page number is required"}), 400
+        
+    try:
+        success = regenerate_page(page_number)
+        if success:
+            return jsonify({"status": "success", "message": f"Page {page_number} regenerated"})
+        else:
+            return jsonify({"error": "Failed to regenerate page"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/output/<path:filename>')
 def serve_output(filename):

@@ -616,7 +616,12 @@ function renderPage(index) {
     const timestamp = new Date().getTime(); // Cache buster
 
     container.innerHTML = `
-        <img src="/output/cards/story_card_${page.page_number}.png?t=${timestamp}" alt="Page ${page.page_number}" class="story-card-img">
+        <div class="page-image-wrapper" style="position: relative; display: inline-block;">
+            <img src="/output/cards/story_card_${page.page_number}.png?t=${timestamp}" alt="Page ${page.page_number}" class="story-card-img">
+            <button onclick="regenerateImage(${page.page_number})" class="regenerate-btn" title="Regenerate Image">
+                🔄 Regenerate Image
+            </button>
+        </div>
     `;
 
     pageNum.innerText = index + 1;
@@ -625,6 +630,46 @@ function renderPage(index) {
     // Update buttons
     document.getElementById('prevBtn').disabled = index === 0;
     document.getElementById('nextBtn').disabled = index === currentStory.pages.length - 1;
+}
+
+function regenerateImage(pageNumber) {
+    if (!confirm('Are you sure you want to regenerate this image? It will replace the current one.')) return;
+
+    const btn = document.querySelector('.regenerate-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '🔄 Regenerating...';
+    }
+
+    fetch('/api/regenerate_page', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page_number: pageNumber })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Reload the page to show new image
+                // Add a small delay to ensure file system update is caught
+                setTimeout(() => {
+                    renderPage(currentPageIndex);
+                }, 500);
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄 Regenerate Image';
+                }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Failed to regenerate image');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '🔄 Regenerate Image';
+            }
+        });
 }
 
 function prevPage() {
