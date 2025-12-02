@@ -20,6 +20,10 @@ def run_generation(story_prompt):
     generation_state["is_generating"] = True
     generation_state["status"] = "Starting..."
     generation_state["logs"] = []
+    
+    # Reset the global STATUS to prevent showing stale "Complete" from previous run
+    from story_generator import update_status
+    update_status("Starting...")
 
     try:
         # Check for test mode

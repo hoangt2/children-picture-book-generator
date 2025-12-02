@@ -445,13 +445,27 @@ button:disabled {
     margin-bottom: 1.5rem;
     color: var(--text-primary);
 }
+
 /* Header Controls */
 .header-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 2rem;
     margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lang-label {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
 }
 
 .toggle-label {
@@ -482,7 +496,7 @@ button:disabled {
 .regenerate-btn:hover {
     background: rgba(0, 0, 0, 0.8);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .regenerate-btn:disabled {
@@ -527,15 +541,15 @@ button:disabled {
     transition: .4s;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: var(--accent);
 }
 
-input:focus + .slider {
+input:focus+.slider {
     box-shadow: 0 0 1px var(--accent);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(16px);
 }
 

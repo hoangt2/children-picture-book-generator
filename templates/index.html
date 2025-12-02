@@ -12,14 +12,24 @@
 <body>
     <div class="container">
         <header>
-            <h1>Children's Story Book Generator</h1>
-            <p>Create magical stories for children aged 3-6 with AI.</p>
+            <h1 data-i18n="appTitle">Children's Story Book Generator</h1>
+            <p data-i18n="appSubtitle">Create magical stories for children aged 3-6 with AI.</p>
             <div class="header-controls">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="testModeToggle" checked>
-                    <span class="slider round"></span>
-                </label>
-                <span class="toggle-label">Test Mode</span>
+                <div class="control-group">
+                    <span class="lang-label">EN</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="languageToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="lang-label">VN</span>
+                </div>
+                <div class="control-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="testModeToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label" data-i18n="testMode">Test Mode</span>
+                </div>
             </div>
         </header>
 
@@ -27,11 +37,11 @@
             <div class="wizard-container">
                 <!-- Progress Stepper -->
                 <div class="stepper">
-                    <div class="step active" data-step="1">1. Setup</div>
-                    <div class="step" data-step="2">2. Hero</div>
-                    <div class="step" data-step="3">3. Sidekick</div>
-                    <div class="step" data-step="4">4. Mission</div>
-                    <div class="step" data-step="5">5. Setting</div>
+                    <div class="step active" data-step="1" data-i18n="step1">1. Setup</div>
+                    <div class="step" data-step="2" data-i18n="step2">2. Hero</div>
+                    <div class="step" data-step="3" data-i18n="step3">3. Sidekick</div>
+                    <div class="step" data-step="4" data-i18n="step4">4. Mission</div>
+                    <div class="step" data-step="5" data-i18n="step5">5. Setting</div>
                 </div>
 
                 <!-- Wizard Content -->
@@ -41,17 +51,18 @@
 
                 <!-- Navigation -->
                 <div class="wizard-nav">
-                    <button id="backBtn" class="secondary-btn hidden" onclick="prevStep()">Back</button>
-                    <button id="nextBtn" class="primary-btn" onclick="nextStep()">Next</button>
+                    <button id="backBtn" class="secondary-btn hidden" onclick="prevStep()"
+                        data-i18n="backBtn">Back</button>
+                    <button id="nextBtn" class="primary-btn" onclick="nextStep()" data-i18n="nextBtn">Next</button>
                     <button id="generateBtn" class="primary-btn hidden" onclick="startGeneration()">
-                        <span class="icon">✨</span> Create Story
+                        <span class="icon">✨</span> <span data-i18n="createStoryBtn">Create Story</span>
                     </button>
                 </div>
             </div>
 
             <!-- Progress Section -->
             <div id="progressContainer" class="progress-container hidden">
-                <h2>Creating Your Story...</h2>
+                <h2 data-i18n="creatingStory">Creating Your Story...</h2>
                 <div class="progress-bar">
                     <div class="progress-fill"></div>
                 </div>
@@ -68,18 +79,20 @@
                     <button id="nextBtn" class="nav-btn" onclick="nextPage()">▶</button>
                 </div>
                 <div class="page-indicator">
-                    Page <span id="pageNum">1</span> of <span id="totalPages">8</span>
+                    <span data-i18n="page">Page</span> <span id="pageNum">1</span> <span data-i18n="of">of</span> <span
+                        id="totalPages">8</span>
                 </div>
-                <button class="start-over-btn" onclick="startOver()">✨ Create Another Story</button>
+                <button class="start-over-btn" onclick="startOver()">✨ <span data-i18n="createAnotherBtn">Create Another
+                        Story</span></button>
             </div>
 
             <!-- Download Section -->
             <div id="downloadSection" class="download-section hidden">
                 <a href="/output/story.pdf" target="_blank" class="download-btn">
-                    Download PDF Book 📥
+                    <span data-i18n="downloadPdf">Download PDF Book</span> 📥
                 </a>
                 <button onclick="archiveStory()" class="secondary-btn">
-                    Save to Archive 💾
+                    <span data-i18n="saveArchive">Save to Archive</span> 💾
                 </button>
             </div>
         </main>
