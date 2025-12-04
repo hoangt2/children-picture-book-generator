@@ -378,7 +378,7 @@ def regenerate_page(page_number, output_dir="output"):
     # Find the page
     target_page = None
     for page in story.get("pages", []):
-        if page.get("page_number") == page_number:
+        if str(page.get("page_number")) == str(page_number):
             target_page = page
             break
             
@@ -430,10 +430,6 @@ def regenerate_page(page_number, output_dir="output"):
         return True
         
     return False
-    pdf_path = os.path.join(dirs["root"], "story.pdf")
-    compile_to_pdf(dirs["cards"], pdf_path)
-    
-    update_status("Complete")
 
 
 if __name__ == "__main__":
