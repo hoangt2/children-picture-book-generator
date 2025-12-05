@@ -8,6 +8,7 @@ export const translations = {
         step3: "3. Sidekick",
         step4: "4. Mission",
         step5: "5. Setting",
+        step6: "6. Review",
         backBtn: "Back",
         nextBtn: "Next",
         createStoryBtn: "Create Story",
@@ -20,11 +21,17 @@ export const translations = {
 
         // Section Titles
         setupTitle: "Let's Get Started!",
-        heroTitle: "Who is the hero?",
+        heroTitle: "Who is the main character?",
         sidekickTitle: "Choose a Sidekick",
         missionTitle: "What is the Mission?",
         settingTitle: "Where does it take place?",
         styleTitle: "Choose Art Style",
+        reviewTitle: "Ready to Create!",
+        readyToCreate: "Everything looks great!",
+        reviewMessage: "Click 'Create Story' to generate your magical book.",
+        unnamed: "Unnamed",
+        heroType: "Type",
+        yearsOld: "years old",
 
         // Genre Selection
         genreTitle: "Choose Story Type",
@@ -35,7 +42,7 @@ export const translations = {
 
         // Form Labels
         childAge: "Child's Age",
-        heroName: "Hero Name",
+        heroName: "Character Name",
         heroNamePlaceholder: "e.g., Emma, Liam, etc.",
         animalNamePlaceholder: "e.g., Benny, Luna, etc.",
         customizeAppearance: "Customize Appearance",
@@ -50,7 +57,7 @@ export const translations = {
         accessories: "Accessories",
 
         // Options (Keys match IDs)
-        hero_human: "A Child (Human)",
+        hero_human: "A Child",
         hero_animal: "An Animal",
 
         // Animal Archetypes
@@ -73,9 +80,18 @@ export const translations = {
         sidekick_none: "No Sidekick (Solo Adventure)",
         sidekick_pet_dog: "Pet Dog",
         sidekick_pet_cat: "Pet Cat",
+        sidekick_pet_rabbit: "Pet Rabbit",
+        sidekick_pet_bird: "Pet Bird",
+        sidekick_sibling: "Younger Sibling",
+        sidekick_friend: "Best Friend",
+        sidekick_grandparent: "Grandparent",
         sidekick_robot: "Tiny Robot",
         sidekick_fairy: "Glow Fairy",
         sidekick_stuffed_animal: "Favorite Teddy Bear",
+        sidekick_dragon: "Friendly Dragon",
+        sidekick_unicorn: "Magical Unicorn",
+        sidekick_talking_tree: "Wise Talking Tree",
+        sidekick_magic_butterfly: "Magic Butterfly",
 
         // Themes Categories
         cat_emotional: "Emotional Growth",
@@ -252,6 +268,7 @@ export const translations = {
         step3: "3. Bạn đồng hành",
         step4: "4. Nhiệm vụ",
         step5: "5. Bối cảnh",
+        step6: "6. Xem lại",
         backBtn: "Quay lại",
         nextBtn: "Tiếp theo",
         createStoryBtn: "Tạo Truyện",
@@ -269,6 +286,12 @@ export const translations = {
         missionTitle: "Nhiệm vụ là gì?",
         settingTitle: "Câu chuyện diễn ra ở đâu?",
         styleTitle: "Chọn phong cách vẽ",
+        reviewTitle: "Sẵn sàng tạo truyện!",
+        readyToCreate: "Mọi thứ đã hoàn hảo!",
+        reviewMessage: "Nhấn 'Tạo Truyện' để tạo cuốn sách kỳ diệu của bạn.",
+        unnamed: "Chưa đặt tên",
+        heroType: "Loại",
+        yearsOld: "tuổi",
 
         // Genre Selection
         genreTitle: "Chọn loại truyện",
@@ -294,7 +317,7 @@ export const translations = {
         accessories: "Phụ kiện",
 
         // Options
-        hero_human: "Một đứa trẻ (Người)",
+        hero_human: "Một đứa trẻ",
         hero_animal: "Một con vật",
 
         // Animal Archetypes
@@ -317,9 +340,18 @@ export const translations = {
         sidekick_none: "Không có (Phiêu lưu một mình)",
         sidekick_pet_dog: "Chó cưng",
         sidekick_pet_cat: "Mèo cưng",
+        sidekick_pet_rabbit: "Thỏ cưng",
+        sidekick_pet_bird: "Chim cưng",
+        sidekick_sibling: "Em trai/em gái",
+        sidekick_friend: "Bạn thân",
+        sidekick_grandparent: "Ông/Bà",
         sidekick_robot: "Robot nhỏ",
         sidekick_fairy: "Tiên nữ phát sáng",
         sidekick_stuffed_animal: "Gấu bông yêu thích",
+        sidekick_dragon: "Rồng nhỏ thân thiện",
+        sidekick_unicorn: "Kỳ lân thần kỳ",
+        sidekick_talking_tree: "Cây cổ thụ biết nói",
+        sidekick_magic_butterfly: "Bướm kỳ diệu",
 
         // Themes Categories
         cat_emotional: "Phát triển cảm xúc",

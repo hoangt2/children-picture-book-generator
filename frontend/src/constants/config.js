@@ -59,12 +59,26 @@ export const bookConfigOptions = {
         ]
     },
     sidekick: [
-        { id: 'none', labelKey: 'sidekick_none', prompt: 'solitary hero' },
-        { id: 'pet_dog', labelKey: 'sidekick_pet_dog', prompt: 'accompanied by a playful golden retriever puppy' },
-        { id: 'pet_cat', labelKey: 'sidekick_pet_cat', prompt: 'accompanied by a lazy orange tabby cat' },
-        { id: 'robot', labelKey: 'sidekick_robot', prompt: 'accompanied by a small, floating, friendly robot' },
-        { id: 'fairy', labelKey: 'sidekick_fairy', prompt: 'accompanied by a tiny glowing magical fairy' },
-        { id: 'stuffed_animal', labelKey: 'sidekick_stuffed_animal', prompt: 'holding a teddy bear that comes to life in their imagination' }
+        // Universal
+        { id: 'none', labelKey: 'sidekick_none', prompt: 'solitary hero', type: 'both' },
+
+        // Realistic companions
+        { id: 'pet_dog', labelKey: 'sidekick_pet_dog', prompt: 'accompanied by a playful golden retriever puppy', type: 'realistic' },
+        { id: 'pet_cat', labelKey: 'sidekick_pet_cat', prompt: 'accompanied by a lazy orange tabby cat', type: 'realistic' },
+        { id: 'pet_rabbit', labelKey: 'sidekick_pet_rabbit', prompt: 'accompanied by a fluffy white rabbit', type: 'realistic' },
+        { id: 'pet_bird', labelKey: 'sidekick_pet_bird', prompt: 'accompanied by a colorful parrot', type: 'realistic' },
+        { id: 'sibling', labelKey: 'sidekick_sibling', prompt: 'with their younger sibling', type: 'realistic' },
+        { id: 'friend', labelKey: 'sidekick_friend', prompt: 'with their best friend from the neighborhood', type: 'realistic' },
+        { id: 'grandparent', labelKey: 'sidekick_grandparent', prompt: 'with their loving grandparent', type: 'realistic' },
+
+        // Fantasy companions
+        { id: 'stuffed_animal', labelKey: 'sidekick_stuffed_animal', prompt: 'holding a teddy bear that comes to life in their imagination', type: 'fantasy' },
+        { id: 'fairy', labelKey: 'sidekick_fairy', prompt: 'accompanied by a tiny glowing magical fairy', type: 'fantasy' },
+        { id: 'robot', labelKey: 'sidekick_robot', prompt: 'accompanied by a small, floating, friendly robot', type: 'fantasy' },
+        { id: 'dragon', labelKey: 'sidekick_dragon', prompt: 'accompanied by a small friendly dragon', type: 'fantasy' },
+        { id: 'unicorn', labelKey: 'sidekick_unicorn', prompt: 'accompanied by a magical unicorn', type: 'fantasy' },
+        { id: 'talking_tree', labelKey: 'sidekick_talking_tree', prompt: 'guided by a wise talking tree', type: 'fantasy' },
+        { id: 'magic_butterfly', labelKey: 'sidekick_magic_butterfly', prompt: 'followed by a magical glowing butterfly', type: 'fantasy' }
     ],
     themes: [
         {

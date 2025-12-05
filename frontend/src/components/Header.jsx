@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useWizard } from '../contexts/WizardContext';
-import { Map, User, Users, Flag, Mountain, Star } from 'lucide-react';
+import { Map, User, Users, Flag, Mountain, Star, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const steps = [
@@ -10,6 +10,7 @@ const steps = [
     { id: 3, icon: Users, label: 'step3' },
     { id: 4, icon: Flag, label: 'step4' },
     { id: 5, icon: Mountain, label: 'step5' },
+    { id: 6, icon: CheckCircle, label: 'step6' },
 ];
 
 const Header = () => {
@@ -29,9 +30,9 @@ const Header = () => {
             {/* Adventure Map Progress Bar */}
             <div className="w-full max-w-3xl relative flex items-center justify-between px-4 md:px-12 py-4 bg-white/50 rounded-full backdrop-blur-sm shadow-magic">
                 {/* Connecting Line */}
-                <div className="absolute left-12 right-12 top-1/2 h-1 bg-gray-200 -z-10 rounded-full overflow-hidden">
+                <div className="absolute left-12 right-12 top-1/2 h-1 bg-progress-inactive -z-10 rounded-full overflow-hidden">
                     <motion.div
-                        className="h-full bg-magic-secondary"
+                        className="h-full bg-progress-active"
                         initial={{ width: '0%' }}
                         animate={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
                         transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -49,9 +50,9 @@ const Header = () => {
                                 className={`
                                     w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center
                                     transition-colors duration-300 border-2
-                                    ${isActive ? 'bg-magic-secondary border-magic-primary text-white scale-110 shadow-lg' :
+                                    ${isActive ? 'bg-magic-primary border-magic-primary text-white scale-110 shadow-lg' :
                                         isCompleted ? 'bg-magic-primary border-magic-primary text-white' :
-                                            'bg-white border-gray-200 text-gray-400'}
+                                            'bg-white border-gray-300 text-gray-400'}
                                 `}
                                 whileHover={{ scale: 1.1 }}
                                 animate={isActive ? { y: [0, -5, 0] } : {}}

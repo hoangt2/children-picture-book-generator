@@ -8,15 +8,42 @@ const Step3Sidekick = () => {
     const { storyData, updateStoryData } = useWizard();
     const { t } = useTranslation();
 
+    // Filter sidekicks based on genre
+    const filteredSidekicks = bookConfigOptions.sidekick.filter(option => {
+        if (option.type === 'both') return true;
+        return option.type === storyData.storyGenre;
+    });
+
+    // Emoji mapping for all sidekicks
+    const getEmoji = (id) => {
+        const emojiMap = {
+            'none': '👤',
+            'pet_dog': '🐶',
+            'pet_cat': '🐱',
+            'pet_rabbit': '🐰',
+            'pet_bird': '🦜',
+            'sibling': '👶',
+            'friend': '👧',
+            'grandparent': '👵',
+            'stuffed_animal': '🧸',
+            'fairy': '🧚',
+            'robot': '🤖',
+            'dragon': '🐉',
+            'unicorn': '🦄',
+            'talking_tree': '🌳',
+            'magic_butterfly': '🦋'
+        };
+        return emojiMap[id] || '❓';
+    };
+
     return (
         <div className="space-y-8">
             <div className="text-center">
                 <h2 className="text-2xl font-bold text-magic-text mb-2">{t('sidekickTitle')}</h2>
-                <p className="text-gray-500">{t('step3')}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {bookConfigOptions.sidekick.map((option) => (
+                {filteredSidekicks.map((option) => (
                     <motion.button
                         key={option.id}
                         whileHover={{ scale: 1.03 }}
@@ -30,17 +57,11 @@ const Step3Sidekick = () => {
                         `}
                     >
                         <div className="text-4xl">
-                            {option.id === 'none' && '👤'}
-                            {option.id === 'pet_dog' && '🐶'}
-                            {option.id === 'pet_cat' && '🐱'}
-                            {option.id === 'robot' && '🤖'}
-                            {option.id === 'fairy' && '🧚'}
-                            {option.id === 'stuffed_animal' && '🧸'}
+                            {getEmoji(option.id)}
                         </div>
                         <h3 className="text-lg font-bold text-magic-text">
                             {t(option.labelKey)}
                         </h3>
-                        {/* <p className="text-sm text-gray-500">{option.prompt}</p> */}
                     </motion.button>
                 ))}
             </div>

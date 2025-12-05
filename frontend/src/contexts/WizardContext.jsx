@@ -7,7 +7,7 @@ export const WizardProvider = ({ children }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [testMode, setTestMode] = useState(false);
     const [storyData, setStoryData] = useState({
-        childAge: 3,
+        childAge: 6,
         childName: '',
         language: 'vi',
         storyGenre: 'realistic',
@@ -16,7 +16,13 @@ export const WizardProvider = ({ children }) => {
             type: 'human',
             gender: 'Boy',
             name: '',
-            traits: {}
+            traits: {
+                race: 'Asian',
+                skinTone: 'Light',
+                hairColor: 'Black',
+                hairStyle: 'Short & Straight',
+                accessories: 'None'
+            }
         },
         sidekick: bookConfigOptions.sidekick.find(s => s.id === 'none'),
         theme: bookConfigOptions.themes[0].options[0],
@@ -34,7 +40,7 @@ export const WizardProvider = ({ children }) => {
         }));
     };
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 5));
+    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 6));
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
     const goToStep = (step) => setCurrentStep(step);
 

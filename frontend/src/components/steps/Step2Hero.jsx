@@ -10,7 +10,20 @@ const Step2Hero = () => {
     const { t } = useTranslation();
 
     const updateHero = (key, value) => {
-        updateStoryData('hero', { ...storyData.hero, [key]: value });
+        // When gender changes, update default hair style
+        if (key === 'gender') {
+            const defaultHairStyle = value === 'Boy' ? 'Short & Straight' : 'Long & Straight';
+            updateStoryData('hero', {
+                ...storyData.hero,
+                [key]: value,
+                traits: {
+                    ...storyData.hero.traits,
+                    hairStyle: defaultHairStyle
+                }
+            });
+        } else {
+            updateStoryData('hero', { ...storyData.hero, [key]: value });
+        }
     };
 
     const updateTraits = (key, value) => {
@@ -24,7 +37,6 @@ const Step2Hero = () => {
         <div className="space-y-8">
             <div className="text-center">
                 <h2 className="text-2xl font-bold text-magic-text mb-2">{t('heroTitle')}</h2>
-                <p className="text-gray-500">{t('step2')}</p>
             </div>
 
             {/* Character Type Selection */}
@@ -83,11 +95,32 @@ const Step2Hero = () => {
                                     className={`
                                         px-6 py-3 rounded-xl border-2 font-bold flex items-center gap-2 transition-all
                                         ${storyData.hero.gender === opt.value
-                                            ? 'border-magic-secondary bg-magic-secondary/20 text-magic-text'
+                                            ? 'border-magic-primary bg-magic-primary/20 text-magic-text'
                                             : 'border-gray-200 hover:bg-gray-50'}
                                     `}
                                 >
                                     {opt.value === 'Boy' ? '👦' : '👧'} {t(opt.labelKey)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Race/Ethnicity */}
+                    <div>
+                        <label className="block font-bold text-gray-700 mb-3">{t('race')}</label>
+                        <div className="flex flex-wrap gap-3">
+                            {bookConfigOptions.hero.humanTraits.race.map((opt) => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => updateTraits('race', opt.value)}
+                                    className={`
+                                        px-4 py-2 rounded-lg text-sm font-medium transition-all
+                                        ${storyData.hero.traits.race === opt.value
+                                            ? 'bg-magic-primary text-white shadow-md'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                                    `}
+                                >
+                                    {t(opt.labelKey)}
                                 </button>
                             ))}
                         </div>
@@ -146,7 +179,7 @@ const Step2Hero = () => {
                                         className={`
                                             px-4 py-2 rounded-lg text-sm font-medium transition-all
                                             ${storyData.hero.traits[trait] === opt.value
-                                                ? 'bg-magic-accent text-white shadow-md'
+                                                ? 'bg-magic-primary text-white shadow-md'
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
                                         `}
                                     >
@@ -173,8 +206,8 @@ const Step2Hero = () => {
                                 className={`
                                     p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all
                                     ${storyData.hero.animalArchetype?.id === animal.id
-                                        ? 'border-magic-secondary bg-magic-secondary/10 shadow-md'
-                                        : 'border-gray-200 hover:border-magic-secondary/50'}
+                                        ? 'border-magic-primary bg-magic-primary/10 shadow-md'
+                                        : 'border-gray-200 hover:border-magic-primary/50'}
                                 `}
                             >
                                 <span className="text-3xl">

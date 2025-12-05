@@ -9,6 +9,7 @@ import Step2Hero from './steps/Step2Hero';
 import Step3Sidekick from './steps/Step3Sidekick';
 import Step4Mission from './steps/Step4Mission';
 import Step5Setting from './steps/Step5Setting';
+import Step6Review from './steps/Step6Review';
 
 const Wizard = () => {
     const { currentStep, prevStep, nextStep, storyData, isGenerating, setIsGenerating, setGeneratedStory } = useWizard();
@@ -148,7 +149,7 @@ const Wizard = () => {
     };
 
     const handleNext = () => {
-        if (currentStep === 5) {
+        if (currentStep === 6) {
             handleCreateStory();
         } else {
             nextStep();
@@ -162,6 +163,7 @@ const Wizard = () => {
             case 3: return <Step3Sidekick />;
             case 4: return <Step4Mission />;
             case 5: return <Step5Setting />;
+            case 6: return <Step6Review />;
             default: return null;
         }
     };
@@ -228,8 +230,8 @@ const Wizard = () => {
                         onClick={handleNext}
                         className="px-8 py-3 rounded-xl font-bold bg-magic-primary text-white shadow-lg shadow-magic-primary/30 hover:scale-105 hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
                     >
-                        {currentStep === 5 ? t('createStoryBtn') : t('nextBtn')}
-                        {currentStep !== 5 && (
+                        {currentStep === 6 ? t('createStoryBtn') : t('nextBtn')}
+                        {currentStep !== 6 && (
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>

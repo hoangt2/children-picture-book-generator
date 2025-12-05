@@ -24,7 +24,6 @@ const Step4Mission = () => {
         <div className="space-y-8">
             <div className="text-center">
                 <h2 className="text-2xl font-bold text-magic-text mb-2">{t('missionTitle')}</h2>
-                <p className="text-gray-500">{t('step4')}</p>
             </div>
 
             <div className="space-y-8">
@@ -43,8 +42,8 @@ const Step4Mission = () => {
                                     className={`
                                         p-5 rounded-xl border-2 text-left transition-all
                                         ${storyData.theme?.id === option.id
-                                            ? 'border-magic-accent bg-magic-accent/10 shadow-md ring-2 ring-magic-accent'
-                                            : 'border-gray-200 hover:border-magic-accent/50 hover:bg-gray-50'}
+                                            ? 'border-magic-primary bg-magic-primary/10 shadow-md ring-2 ring-magic-primary'
+                                            : 'border-gray-200 hover:border-magic-primary/50 hover:bg-gray-50'}
                                     `}
                                 >
                                     <h4 className="font-bold text-magic-text mb-1">{t(option.labelKey)}</h4>

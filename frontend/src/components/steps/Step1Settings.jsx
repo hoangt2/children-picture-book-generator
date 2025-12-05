@@ -24,7 +24,6 @@ const Step1Settings = () => {
         <div className="space-y-8">
             <div className="text-center">
                 <h2 className="text-2xl font-bold text-magic-text mb-2">{t('setupTitle')}</h2>
-                <p className="text-gray-500">{t('step1')}</p>
             </div>
 
             {/* Test Mode Toggle */}
@@ -104,15 +103,16 @@ const Step1Settings = () => {
                 <label className="block text-lg font-bold text-magic-text mb-4">
                     {t('childAge')}
                 </label>
-                <div className="flex flex-wrap gap-3 justify-center">
+                <div className="flex gap-2 justify-center overflow-x-auto py-2 px-4">
                     {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((age) => (
                         <button
                             key={age}
                             onClick={() => updateStoryData('childAge', age)}
                             className={`
-                                w-12 h-12 rounded-full font-bold text-lg transition-all
+                                w-14 h-14 rounded-full font-bold transition-all flex-shrink-0 flex items-center justify-center
+                                ${age >= 10 ? 'text-base' : 'text-lg'}
                                 ${storyData.childAge === age
-                                    ? 'bg-magic-secondary text-magic-text shadow-lg scale-110'
+                                    ? 'bg-magic-primary text-white shadow-lg scale-110'
                                     : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}
                             `}
                         >

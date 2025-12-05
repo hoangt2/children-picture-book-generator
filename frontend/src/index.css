@@ -1,25 +1,64 @@
 @import "tailwindcss";
 
 @theme {
-  --color-magic-bg: #f0f9ff;
+  /* Global Background */
+  --color-magic-bg: #F9F9F9;
   --color-magic-card: #ffffff;
-  --color-magic-primary: #ff6b6b;
-  --color-magic-secondary: #ffd93d;
-  --color-magic-text: #2d3748;
-  --color-magic-accent: #4fd1c5;
 
+  /* Primary & Secondary Actions */
+  --color-magic-primary: #FF8BA7;
+  --color-magic-secondary: #E0E0E0;
+
+  /* Text Colors */
+  --color-magic-text: #4A4A4A;
+  --color-magic-text-body: #666666;
+  --color-magic-text-light: #ffffff;
+
+  /* Accent Colors for Cards */
+  --color-magic-accent: #C4FCEF;
+
+  /* Step-specific Card Colors */
+  --color-step-1: #C4FCEF;
+  /* Mint Green - Settings */
+  --color-step-2: #FEF3C7;
+  /* Pale Buttermilk - Character */
+  --color-step-3: #E0E7FF;
+  /* Soft Periwinkle - Companion */
+  --color-step-4: #F3E8FF;
+  /* Light Lavender - Mission */
+  --color-step-5: #D1FAE5;
+  /* Pale Emerald - Context */
+  --color-step-6: #FFE4E6;
+  /* Rose Water - Art Style */
+
+  /* Progress Bar */
+  --color-progress-active: #FF8BA7;
+  --color-progress-inactive: #E5E7EB;
+
+  /* Font */
   --font-magic: Nunito, Quicksand, sans-serif;
 
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
+  /* Border Radius - Increased for bubbly feel */
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
 
-  --shadow-magic: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-magic-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* Shadows - Softer for pastel theme */
+  --shadow-magic: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-magic-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 @layer base {
   body {
-    @apply bg-magic-bg text-magic-text font-magic antialiased;
+    @apply bg-magic-bg text-magic-text-body font-magic antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-magic-text;
   }
 }
