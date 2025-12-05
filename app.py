@@ -1,11 +1,14 @@
-from flask import Flask, render_template, jsonify, send_from_directory, request
+from flask import Flask, render_template, jsonify, send_from_directory, request, send_file
 import threading
 import os
 import json
 import time
 from story_generator import main as generate_story, generate_mock_story, regenerate_page
 
-app = Flask(__name__)
+# Point Flask to the React build directory
+app = Flask(__name__, 
+            static_folder='frontend/dist/assets',
+            static_url_path='/assets')
 
 # Global state for the generation process
 generation_state = {
@@ -43,7 +46,8 @@ def run_generation(story_prompt):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    """Serve the React app."""
+    return send_file(os.path.join(os.getcwd(), 'frontend/dist/index.html'))
 
 @app.route('/api/generate', methods=['POST'])
 def start_generation():
@@ -71,9 +75,42 @@ def get_story():
         with open("output/data/story.json", "r", encoding="utf-8") as f:
             data = json.load(f)
         return jsonify(data)
-    except FileNotFoundError:
-        return jsonify({"error": "No story found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+@app.route('/api/generate_story', methods=['POST'])
+def generate_story_api():
+    """Generate a story from React frontend data."""
+    global generation_state
+    
+    if generation_state["is_generating"]:
+        return jsonify({"error": "Already generating"}), 400
+    
+    try:
+        data = request.get_json() or {}
+        
+        # Start generation in a thread
+        thread = threading.Thread(target=run_generation, args=(data,))
+        thread.start()
+        
+        # Wait for generation to complete (or timeout after 5 minutes)
+        timeout = 300  # 5 minutes
+        start_time = time.time()
+        while generation_state["is_generating"] and (time.time() - start_time) < timeout:
+            time.sleep(0.5)
+        
+        # Check if generation completed successfully
+        if generation_state["status"] == "Complete":
+            # Load and return the generated story
+            with open("output/data/story.json", "r", encoding="utf-8") as f:
+                story_data = json.load(f)
+            return jsonify({"status": "success", "story": story_data})
+        else:
+            return jsonify({"error": generation_state["status"]}), 500
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+ 
 @app.route('/api/regenerate_page', methods=['POST'])
 def regenerate_page_endpoint():
     data = request.get_json()
@@ -137,4 +174,4 @@ def archive_story():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)

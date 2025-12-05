@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-magic-bg: #f0f9ff;
+  --color-magic-card: #ffffff;
+  --color-magic-primary: #ff6b6b;
+  --color-magic-secondary: #ffd93d;
+  --color-magic-text: #2d3748;
+  --color-magic-accent: #4fd1c5;
+
+  --font-magic: Nunito, Quicksand, sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+
+  --shadow-magic: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-magic-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+@layer base {
+  body {
+    @apply bg-magic-bg text-magic-text font-magic antialiased;
+  }
+}

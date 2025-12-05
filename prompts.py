@@ -102,21 +102,31 @@ def get_story_prompt(target_language, age, story_params):
     hero_desc = ""
     hero_name = ""
     if hero.get('type') == 'human':
-        d = hero.get('details', {})
-        hero_name = d.get('name', '')
-        gender = d.get('gender', 'child').lower()
-        race = d.get('race', '')
-        race_desc = f"{race} " if race else ""
-        hero_desc = f"a {age}-year-old {race_desc}{gender} with {d.get('skinTone', 'medium')} skin, {d.get('hairColor', 'brown')} {d.get('hairStyle', 'short')} hair"
-        if d.get('accessories') and d.get('accessories') != 'None':
-            hero_desc += f", wearing {d.get('accessories')}"
+        # Frontend structure: hero.gender, hero.name, hero.traits.{skinTone, hairColor, hairStyle, accessories}
+        hero_name = hero.get('name', '')
+        gender = hero.get('gender', 'child').lower()
+        
+        # Get traits from hero.traits or hero.details (for backward compatibility)
+        traits = hero.get('traits', hero.get('details', {}))
+        
+        # Build description
+        skin_tone = traits.get('skinTone', 'medium')
+        hair_color = traits.get('hairColor', 'brown')
+        hair_style = traits.get('hairStyle', 'short')
+        
+        hero_desc = f"a {age}-year-old {gender} with {skin_tone} skin, {hair_color} {hair_style} hair"
+        
+        accessories = traits.get('accessories')
+        if accessories and accessories != 'None':
+            hero_desc += f", wearing {accessories}"
+        
         if hero_name:
             hero_desc = f"{hero_name}, {hero_desc}"
     else:
         # Animal
-        d = hero.get('details', {})
-        hero_name = d.get('name', '')
-        animal_type = d.get('animal', 'animal')
+        hero_name = hero.get('name', '')
+        animal_archetype = hero.get('animalArchetype', {})
+        animal_type = animal_archetype.get('id', 'animal') if animal_archetype else 'animal'
         hero_desc = f"a cute {animal_type}"
         if hero_name:
             hero_desc = f"{hero_name}, {hero_desc}"

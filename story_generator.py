@@ -65,7 +65,8 @@ def main(story_prompt):
     
     # Extract basic params for backward compatibility if needed
     target_language = story_prompt.get('language', 'English')
-    age = story_prompt.get('age', 3)
+    # Frontend sends 'childAge', but also support 'age' for backward compatibility
+    age = story_prompt.get('childAge', story_prompt.get('age', 3))
     
     # Update global style guide based on selection
     import prompts
@@ -233,7 +234,7 @@ def process_story(story, output_dir="output", status_callback=None):
     # 3. Process Pages
     for page in story.get("pages", []):
         page_num = page.get("page_number")
-        log(f"Processing Page {page_num}...")
+        update_status(f"Processing page {page_num}...")
         
         # Paths
         image_filename = f"page_{page_num}.png"
@@ -364,12 +365,14 @@ def generate_mock_story(story_prompt):
 
 def regenerate_page(page_number, output_dir="output"):
     """Regenerates the image and card for a specific page."""
+    update_status(f"Regenerating page {page_number}...")
     print(f"Regenerating page {page_number}...")
     
     # Load story data
     data_path = os.path.join(output_dir, "data", "story.json")
     if not os.path.exists(data_path):
         print("Story data not found.")
+        update_status("Error: Story data not found")
         return False
         
     with open(data_path, "r", encoding="utf-8") as f:
@@ -384,6 +387,7 @@ def regenerate_page(page_number, output_dir="output"):
             
     if not target_page:
         print(f"Page {page_number} not found.")
+        update_status(f"Error: Page {page_number} not found")
         return False
         
     # Reconstruct character model paths
@@ -410,6 +414,7 @@ def regenerate_page(page_number, output_dir="output"):
             all_model_paths.append(model_path)
             
     # Regenerate Image
+    update_status(f"Generating new image for page {page_number}...")
     image_filename = f"page_{page_number}.png"
     image_path = os.path.join(dirs["images"], image_filename)
     final_filename = f"story_card_{page_number}.png"
@@ -422,13 +427,18 @@ def regenerate_page(page_number, output_dir="output"):
     
     if success:
         # Create story card
+        update_status(f"Creating story card for page {page_number}...")
         create_story_card(image_path, target_page.get("text_target"), final_path)
         
         # Recompile PDF
+        update_status("Recompiling PDF...")
         from pdf_generator import compile_to_pdf
         compile_to_pdf(dirs["cards"], os.path.join(dirs["root"], "story.pdf"))
+        
+        update_status(f"Page {page_number} regenerated successfully")
         return True
         
+    update_status(f"Failed to regenerate page {page_number}")
     return False
 
 
