@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWizard } from '../contexts/WizardContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,7 +9,9 @@ const StoryBook = () => {
     const { t } = useTranslation();
     const [currentPage, setCurrentPage] = useState(0);
     const [regeneratingPage, setRegeneratingPage] = useState(null);
+    const [regenerationStatus, setRegenerationStatus] = useState('');
     const [isArchiving, setIsArchiving] = useState(false);
+    const [fixPrompt, setFixPrompt] = useState('');
 
     if (!generatedStory) return null;
 
@@ -31,9 +33,8 @@ const StoryBook = () => {
     }
 
     const handleRegenerate = async (pageNumber) => {
-        if (!confirm(t('confirm_regenerate'))) return;
-
         setRegeneratingPage(pageNumber);
+        setRegenerationStatus('Starting...');
 
         // Start polling for status updates
         let statusInterval = null;
@@ -41,9 +42,8 @@ const StoryBook = () => {
             try {
                 const response = await fetch('/api/status');
                 const data = await response.json();
-                if (data.status && data.status !== 'Idle' && data.status !== 'Complete') {
-                    // Show status in console for now (could be a toast notification)
-                    console.log('Regeneration status:', data.status);
+                if (data.status && data.status !== 'Idle') {
+                    setRegenerationStatus(data.status);
                 }
             } catch (error) {
                 console.error('Error polling status:', error);
@@ -55,12 +55,15 @@ const StoryBook = () => {
         try {
             // Add timeout to prevent hanging
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for regeneration
+            const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
 
             const response = await fetch('/api/regenerate_page', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ page_number: pageNumber }),
+                body: JSON.stringify({
+                    page_number: pageNumber,
+                    fix_prompt: fixPrompt
+                }),
                 signal: controller.signal
             });
 
@@ -75,17 +78,21 @@ const StoryBook = () => {
                     return p;
                 });
                 setGeneratedStory({ ...generatedStory, pages: updatedPages });
-                alert(t('regenerate_success'));
+                setFixPrompt(''); // Clear the prompt after success
+                setRegenerationStatus('Done!');
+                setTimeout(() => setRegenerationStatus(''), 2000);
             } else {
-                alert(t('regenerate_failed'));
+                setRegenerationStatus('Failed');
+                setTimeout(() => setRegenerationStatus(''), 3000);
             }
         } catch (error) {
             console.error('Error regenerating:', error);
             if (error.name === 'AbortError') {
-                alert('Regeneration timed out. Please make sure the backend server is running and try again.');
+                setRegenerationStatus('Timed out');
             } else {
-                alert('Error regenerating image: ' + error.message);
+                setRegenerationStatus('Error: ' + error.message);
             }
+            setTimeout(() => setRegenerationStatus(''), 3000);
         } finally {
             if (statusInterval) {
                 clearInterval(statusInterval);
@@ -120,6 +127,8 @@ const StoryBook = () => {
             setIsArchiving(false);
         }
     };
+
+    const isRegenerating = regeneratingPage === pages[currentPage]?.page_number;
 
     return (
         <div className="min-h-screen flex flex-col items-center px-4 py-6">
@@ -174,7 +183,7 @@ const StoryBook = () => {
                 {/* Book Viewer - Responsive Scaling */}
                 <div className="bg-white rounded-3xl shadow-magic overflow-hidden flex flex-col w-full max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl 2xl:max-w-3xl">
                     {/* Image */}
-                    <div className="bg-gray-50 relative group flex items-center justify-center p-4">
+                    <div className="bg-gray-50 relative flex items-center justify-center p-4">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentPage + (pages[currentPage]?.timestamp || '')}
@@ -190,16 +199,31 @@ const StoryBook = () => {
                                 />
                             </motion.div>
                         </AnimatePresence>
+                    </div>
 
-                        {/* Regenerate Button Overlay */}
-                        <button
-                            onClick={() => handleRegenerate(pages[currentPage].page_number)}
-                            disabled={regeneratingPage === pages[currentPage].page_number}
-                            className="absolute top-4 right-4 p-3 rounded-full bg-white/80 backdrop-blur-sm shadow-lg text-gray-700 hover:text-magic-primary hover:bg-white transition-all opacity-0 group-hover:opacity-100"
-                            title={t('regenerate_btn')}
-                        >
-                            <RefreshCw size={20} className={regeneratingPage === pages[currentPage].page_number ? 'animate-spin' : ''} />
-                        </button>
+                    {/* Regenerate Section */}
+                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
+                        <div className="flex flex-col gap-2">
+                            <input
+                                type="text"
+                                value={fixPrompt}
+                                onChange={(e) => setFixPrompt(e.target.value)}
+                                placeholder={t('fix_prompt_placeholder') || "Describe what to change..."}
+                                disabled={isRegenerating}
+                                className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-magic-primary focus:outline-none focus:ring-2 focus:ring-magic-primary/20 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            />
+                            <button
+                                onClick={() => handleRegenerate(pages[currentPage].page_number)}
+                                disabled={isRegenerating}
+                                className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all ${isRegenerating
+                                    ? 'bg-gray-200 text-gray-600 cursor-not-allowed'
+                                    : 'bg-magic-primary text-white hover:bg-magic-primary/90 hover:scale-105'
+                                    }`}
+                            >
+                                <RefreshCw size={16} className={isRegenerating ? 'animate-spin' : ''} />
+                                {isRegenerating ? regenerationStatus : (t('regenerate_btn') || 'Regenerate')}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Text Below Image */}

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from google import genai as imagen_client
 from google.genai import types
-from prompts import IMAGE_STYLE_GUIDE
+import prompts
 from image_composer import create_story_card
 import time
 
@@ -70,8 +70,17 @@ def main(story_prompt):
     
     # Update global style guide based on selection
     import prompts
-    if 'style' in story_prompt and 'imageGenPrompt' in story_prompt['style']:
-        prompts.update_style_guide(story_prompt['style']['imageGenPrompt'])
+    # Frontend sends 'artStyle', but also support 'style' for backward compatibility
+    art_style = story_prompt.get('artStyle', story_prompt.get('style'))
+    if art_style and 'imageGenPrompt' in art_style:
+        style_prompt = art_style['imageGenPrompt']
+        print(f"\n{'='*60}")
+        print(f"APPLYING ART STYLE: {art_style.get('id', 'unknown').upper()}")
+        print(f"Style prompt: {style_prompt}")
+        print(f"{'='*60}\n")
+        prompts.update_style_guide(style_prompt)
+    else:
+        print("\nWARNING: No art style provided, using default\n")
 
     update_status("Starting story generation...")
     
@@ -99,8 +108,16 @@ def generate_character_model(description, output_path):
     
     try:
         client = imagen_client.Client(api_key=GOOGLE_API_KEY)
-        # Prompt for a character sheet to get a consistent reference
-        prompt = f"Character sheet showing the following character(s): {description}. Multiple views if possible, white background. {IMAGE_STYLE_GUIDE}"
+        # Prompt for a character sheet with MULTIPLE poses and expressions for visual variety
+        prompt = f"""Character reference sheet for: {description}.
+
+Draw the SAME character in multiple poses and expressions on a single sheet:
+- Top row: Full body views (front view, side view, back view)
+- Middle row: Different poses (walking, sitting, waving, running)
+- Bottom row: Facial expressions close-ups (happy smile, surprised, curious, excited)
+
+IMPORTANT: Same outfit and colors in all views. White background. Clean line art style.
+{prompts.IMAGE_STYLE_GUIDE}"""
         
         response = client.models.generate_content(
             model='gemini-2.5-flash-image',
@@ -120,6 +137,68 @@ def generate_character_model(description, output_path):
         print(f"Error generating character model: {e}")
         return False
 
+
+def extract_secondary_characters(story):
+    """Uses AI to analyze the story and extract major secondary characters."""
+    print("Analyzing story for secondary characters...")
+    
+    try:
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        # Get main character names to exclude them
+        main_characters = [c.get('name', '') for c in story.get('characters', [])]
+        main_char_names = ', '.join(main_characters) if main_characters else ''
+        
+        # Create prompt for extraction
+        prompt = f"""Analyze this children's story and extract ONLY major secondary characters.
+
+STORY DATA:
+{json.dumps(story, indent=2, ensure_ascii=False)}
+
+CRITERIA for secondary characters:
+1. NOT the main hero ({main_char_names})
+2. Appears in 2 or more pages
+3. Has a specific name or role (e.g., "Mom", "Grandmother", "Dragon King", "Best Friend")
+4. NOT abstract concepts or unnamed groups
+
+Extract their visual descriptions from the image_descriptions. Return ONLY a JSON array:
+
+[
+  {{
+    "name": "Character name or role",
+    "description": "Detailed visual description (age, appearance, clothing, etc.)"
+  }}
+]
+
+If NO secondary characters meet the criteria, return an empty array: []
+"""
+        
+        response = model.generate_content(prompt)
+        
+        try:
+            # Clean up markdown code blocks if present
+            text = response.text.replace("```json", "").replace("```", "").strip()
+            secondary_chars = json.loads(text)
+            
+            if isinstance(secondary_chars, list):
+                print(f"Found {len(secondary_chars)} secondary character(s)")
+                for char in secondary_chars:
+                    print(f"  - {char.get('name', 'Unknown')}")
+                return secondary_chars
+            else:
+                print("Invalid response format, expected array")
+                return []
+                
+        except json.JSONDecodeError as e:
+            print(f"Error parsing secondary characters JSON: {e}")
+            print(f"Response was: {response.text[:200]}")
+            return []
+            
+    except Exception as e:
+        print(f"Error extracting secondary characters: {e}")
+        return []
+
+
 def generate_image(prompt, output_path, character_description="", reference_image_paths=None):
     """Generates an image using Nano Banana (Gemini 2.5 Flash Image)."""
     print(f"Generating image for: {prompt[:50]}...")
@@ -129,7 +208,25 @@ def generate_image(prompt, output_path, character_description="", reference_imag
         client = imagen_client.Client(api_key=GOOGLE_API_KEY)
         
         # Combine character description with the specific page prompt and style guide
-        full_prompt = f"{character_description} {prompt} {IMAGE_STYLE_GUIDE}"
+        # Add strong anti-stiff pose instructions
+        dynamic_scene_instructions = """
+CRITICAL - AVOID STIFF POSES:
+- Do NOT draw characters standing rigidly side-by-side facing camera
+- Do NOT line up characters like a reference sheet or group photo
+- Characters should be ACTIVELY DOING something (playing, talking, reaching, hugging, running)
+- Use natural body language and varied poses that match the action in the scene
+- Characters should interact with each other and their environment, not just stand there
+- Show characters FROM DIFFERENT ANGLES (not always front-facing)
+
+CRITICAL - BACKGROUND REQUIREMENTS:
+- NEVER use plain white or blank backgrounds
+- ALWAYS include a detailed, colorful background that matches the scene
+- Add environmental elements: trees, buildings, furniture, sky, clouds, ground, etc.
+- Use vibrant colors and rich details in the background
+- The background should tell part of the story and create atmosphere
+- Include depth with foreground, middle ground, and background elements
+"""
+        full_prompt = f"{character_description} {prompt} {dynamic_scene_instructions} {prompts.IMAGE_STYLE_GUIDE}"
         
         contents = [full_prompt]
         
@@ -225,6 +322,25 @@ def process_story(story, output_dir="output", status_callback=None):
             character_models[name] = model_path
         else:
             log(f"Failed to generate model for {name}")
+
+    # 2.5 Extract and Generate Models for Secondary Characters
+    log("Extracting secondary characters from story...")
+    secondary_chars = extract_secondary_characters(story)
+    
+    for char in secondary_chars:
+        name = char.get("name", "Unknown")
+        desc = char.get("description", "")
+        safe_name = "".join(x for x in name if x.isalnum())
+        
+        log(f"Processing secondary character: {name}")
+        model_path = os.path.join(dirs["images"], f"character_model_{safe_name}.png")
+        
+        if generate_character_model(desc, model_path):
+            character_models[name] = model_path
+            # Also add to characters list for context
+            characters.append({"name": name, "description": desc})
+        else:
+            log(f"Failed to generate model for secondary character {name}")
 
     # Main character description for fallback/context
     # Combine descriptions of all characters for context
@@ -363,10 +479,18 @@ def generate_mock_story(story_prompt):
     
     update_status("Complete")
 
-def regenerate_page(page_number, output_dir="output"):
-    """Regenerates the image and card for a specific page."""
+def regenerate_page(page_number, output_dir="output", fix_prompt=""):
+    """Regenerates the image and card for a specific page.
+    
+    Args:
+        page_number: The page number to regenerate
+        output_dir: The output directory
+        fix_prompt: Optional user-provided instructions for what to fix/change in the image
+    """
     update_status(f"Regenerating page {page_number}...")
     print(f"Regenerating page {page_number}...")
+    if fix_prompt:
+        print(f"Fix prompt: {fix_prompt}")
     
     # Load story data
     data_path = os.path.join(output_dir, "data", "story.json")
@@ -420,7 +544,21 @@ def regenerate_page(page_number, output_dir="output"):
     final_filename = f"story_card_{page_number}.png"
     final_path = os.path.join(dirs["cards"], final_filename)
     
-    full_prompt = f"{target_page.get('image_description')}"
+    # Build the prompt with optional fix instructions
+    base_prompt = target_page.get('image_description')
+    if fix_prompt:
+        full_prompt = f"""{base_prompt}
+
+CRITICAL - USER REQUESTED MODIFICATION (Keep everything else EXACTLY the same):
+The user wants to make a SMALL, SPECIFIC change to this image. This is like photo editing/retouching.
+- Keep the SAME characters in the SAME positions with the SAME poses
+- Keep the SAME composition and camera angle
+- Keep the SAME overall scene and layout
+- ONLY change what the user specifically requested: {fix_prompt}
+- Everything else should remain as close to the original as possible
+- This is a MINOR EDIT, not a complete regeneration"""
+    else:
+        full_prompt = base_prompt
     
     # Use existing generate_image function
     success = generate_image(full_prompt, image_path, character_description=all_char_desc, reference_image_paths=all_model_paths)

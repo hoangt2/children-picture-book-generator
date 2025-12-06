@@ -4,15 +4,23 @@
 IMAGE_STYLE_GUIDE = """
 Illustration style: childrens book illustration, soft watercolor style, pastel colors, white background, dreamy texture
 IMPORTANT: Do NOT include any text, words, letters, or numbers in the image.
+ABSOLUTELY NO EXTRA CHARACTERS: Only generate the EXACT characters mentioned in the prompt. Do NOT add random people, children, adults, or bystanders in the background or foreground. If only one person is described, show ONLY one person!
 """
 
 def update_style_guide(new_style_prompt):
     """Updates the global image style guide dynamically."""
     global IMAGE_STYLE_GUIDE
     IMAGE_STYLE_GUIDE = f"""
-Illustration style: {new_style_prompt}
-IMPORTANT: Do NOT include any text, words, letters, or numbers in the image.
+CRITICAL: You MUST follow this exact art style for ALL images:
+{new_style_prompt}
+
+IMPORTANT REQUIREMENTS:
+- Do NOT include any text, words, letters, or numbers in the image
+- STRICTLY adhere to the style specified above
+- The visual style is MANDATORY and must be clearly visible
+- **ABSOLUTELY NO EXTRA CHARACTERS**: Only generate the EXACT characters mentioned in the prompt. Do NOT add random people, children, adults, or bystanders in the background or foreground. If only one person is described, show ONLY one person!
 """
+    print(f"Updated IMAGE_STYLE_GUIDE to:\n{IMAGE_STYLE_GUIDE}")
 
 def get_age_constraints(age):
     """
@@ -98,9 +106,12 @@ def get_story_prompt(target_language, age, story_params):
     theme = story_params.get('theme', {})
     setting = story_params.get('setting', {})
     
+
     # Construct Hero Description
     hero_desc = ""
     hero_name = ""
+    hero_outfit = ""
+    
     if hero.get('type') == 'human':
         # Frontend structure: hero.gender, hero.name, hero.traits.{skinTone, hairColor, hairStyle, accessories}
         hero_name = hero.get('name', '')
@@ -118,7 +129,11 @@ def get_story_prompt(target_language, age, story_params):
         
         accessories = traits.get('accessories')
         if accessories and accessories != 'None':
-            hero_desc += f", wearing {accessories}"
+            hero_outfit = f"wearing {accessories}"
+            hero_desc += f", {hero_outfit}"
+        else:
+            hero_outfit = "wearing simple, colorful clothing (t-shirt and shorts/pants)"
+            hero_desc += f", {hero_outfit}"
         
         if hero_name:
             hero_desc = f"{hero_name}, {hero_desc}"
@@ -128,6 +143,7 @@ def get_story_prompt(target_language, age, story_params):
         animal_archetype = hero.get('animalArchetype', {})
         animal_type = animal_archetype.get('id', 'animal') if animal_archetype else 'animal'
         hero_desc = f"a cute {animal_type}"
+        hero_outfit = "natural fur/skin (no human clothes unless specified)"
         if hero_name:
             hero_desc = f"{hero_name}, {hero_desc}"
 
@@ -167,42 +183,94 @@ Your goal is to generate a heartwarming, simple, and engaging story.
 - **Length:** Exactly 8 pages.
 - **Format:** Return ONLY a valid JSON object.
 
-**CRITICAL INSTRUCTION: VISUAL CONSISTENCY**
-- You MUST define the main character in the `characters` list.
-- **IMPORTANT**: In every `image_description`, you MUST repeat the **FULL VISUAL DESCRIPTION** of the hero: {hero_desc}
-    - BAD: "Hero is playing."
-    - GOOD: "{hero_desc} is playing happily in {setting_prompt}."
+**CRITICAL INSTRUCTION: CHARACTER DEFINITION**
+- You MUST define ALL recurring characters (appears in 2+ pages) in the `characters` list.
+- **MANDATORY RULE:** ONLY the MAIN HERO and explicitly chosen SIDEKICK (if configured) should appear.
+- **STRICTLY FORBIDDEN:** DO NOT add parents, grandparents, grandmothers, grandfathers, siblings, cousins, aunts, uncles, neighbors, random adults, or ANY family members UNLESS the story theme EXPLICITLY MENTIONS them in the theme name or description.
+- **EXAMPLES OF FORBIDDEN ADDITIONS:**
+  * "Kite Dreams" theme → ONLY the hero flying the kite (NO random old people watching!)
+  * "Summer Rain" theme → ONLY the hero enjoying rain (NO grandmother with umbrella!)
+  * "Space Adventure" theme → ONLY the hero in space (NO parents saying goodbye!)
+- **ALLOWED EXCEPTIONS (theme explicitly requires them):**
+  * "Grandma's Stories" theme → Grandmother IS required
+  * "Visiting grandparents in countryside" → Grandparents ARE required
+  * "New baby sibling" → Parents/baby ARE required
+- The hero can be ALONE! That's completely fine and often better!
+- Each character needs a detailed visual description for consistency.
+
+**CHARACTER VISUAL DISTINCTIVENESS (VERY IMPORTANT):**
+- Each character MUST have CLEARLY DIFFERENT clothing colors/styles from others.
+- If hero wears BLUE, other characters should wear RED, GREEN, YELLOW - NOT blue!
+- Animals (cats, dogs, etc.) must be described as REALISTIC ANIMALS, not cartoon humanoids. Example: "an orange tabby cat walking on four legs" NOT "a cat wearing clothes"
+- Label characters clearly in descriptions: "An (the main hero in blue) is talking to Minh (the bully in red shirt)"
+
+- **IMPORTANT**: In every `image_description`, you MUST repeat the **FULL VISUAL DESCRIPTION** of ALL characters appearing in that scene.
+    - BAD: "Hero is playing with grandmother."
+    - GOOD: "{hero_desc} is playing happily with grandmother (elderly woman with silver hair in a bun, wearing traditional clothing, kind smile)."
+
+**CINEMATIC & DYNAMIC ILLUSTRATIONS (CRITICAL - READ CAREFULLY):**
+
+**ABSOLUTELY FORBIDDEN - STIFF POSES:**
+- NEVER describe characters "standing side by side" or "standing together"
+- NEVER describe characters in a lineup facing the camera
+- NEVER describe characters in static, posed positions like a photo
+- These create BORING, LIFELESS illustrations!
+
+**REQUIRED - ACTION-BASED SCENES:**
+- Every image_description MUST include an ACTION VERB: running, jumping, reaching, hugging, climbing, laughing, playing, etc.
+- Characters should be DOING something, not just existing in the scene
+- Show INTERACTION: characters looking at each other, touching, helping, playing together
+- Use DYNAMIC body language: leaning forward, arms outstretched, mid-motion poses
+
+**VARIED CAMERA ANGLES (one per page, vary them):**
+- Close-up on face showing emotion
+- Bird's eye view (looking down from above)
+- Low angle (looking up at character)
+- Over-the-shoulder shot
+- Wide establishing shot
+
+**OUTFIT CONSISTENCY:**
+- The hero MUST wear the same {hero_outfit} in every image
+- Do not change clothing colors or styles between pages
+
+**EXAMPLE GOOD vs BAD:**
+- BAD: "An and his dog standing by the tree"
+- GOOD: "Close-up of An hugging his golden puppy tightly, both with joyful expressions, under the shade of the big tree"
+- BAD: "An and Hung standing together"  
+- GOOD: "An reaching out to help Hung up from the ground, while the puppy wags its tail excitedly"
+
+**SIZE & PROPORTIONS (STRICT RULES):**
+- **Adults vs Children**: Adults MUST be significantly taller and larger than children (children reach adult's waist/chest).
+- **Siblings**: Older characters must look taller and more mature than younger characters.
+- **Humans vs Animals**: Maintain realistic size ratios (e.g., a cat is small, a horse is big) unless it's a giant fantasy creature.
+- **Object Scale**: Items must be proportional to characters (e.g., a pencil fits in a hand, a backpack fits on a back).
 
 **JSON Structure:**
 {{
-  "title_target": "Title in {target_language}",
+  "title_target": "Title in {{target_language}}",
   "characters": [
     {{
-      "name": "Name",
+      "name": "Main Hero Name",
       "description": "Detailed visual description matching: {hero_desc}"
+    }},
+    {{
+      "name": "Secondary Character Name (if any recurring characters)",
+      "description": "Detailed visual description (age, appearance, clothing, distinguishing features)"
     }}
   ],
   "pages": [
     {{
       "page_number": 1,
       "type": "cover",
-      "text_target": "Title of the story in {target_language}",
+      "text_target": "Title of the story in {{target_language}}",
       "image_description": "Visual description for the cover. Hero: {hero_desc}. Setting: {setting_prompt}. INCLUDE FULL CHARACTER DETAILS."
     }},
     {{
       "page_number": 2,
       "type": "story",
-      "text_target": "Story text in {target_language}",
-      "image_description": "Scene description. Hero: {hero_desc}. Setting: {setting_prompt}. Action: [describe what's happening]."
+      "text_target": "Story text in {{target_language}}",
+      "image_description": "Scene description. Include FULL visual details of ALL characters in this scene. Hero: {hero_desc}. Setting: {setting_prompt}. Action: [describe what's happening]."
     }}
   ]
 }}
-"""
-
-IMAGE_STYLE_GUIDE = """
-Illustration style: Children's book illustration. Soft, pastel colors. Whimsical, cute, and charming.
-The style should be like a high-quality modern picture book (e.g., watercolor or soft digital art).
-Characters should have large expressive eyes and friendly faces.
-Backgrounds should be dreamy but simple enough not to clutter the scene.
-IMPORTANT: Do NOT include any text, words, letters, or numbers in the image.
 """

@@ -40,7 +40,7 @@ export const WizardProvider = ({ children }) => {
         }));
     };
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 6));
+    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 7));
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
     const goToStep = (step) => setCurrentStep(step);
 

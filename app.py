@@ -3,7 +3,7 @@ import threading
 import os
 import json
 import time
-from story_generator import main as generate_story, generate_mock_story, regenerate_page
+from story_generator import main as generate_story_main, generate_mock_story, regenerate_page
 
 # Point Flask to the React build directory
 app = Flask(__name__, 
@@ -27,6 +27,10 @@ def run_generation(story_prompt):
     # Reset the global STATUS to prevent showing stale "Complete" from previous run
     from story_generator import update_status
     update_status("Starting...")
+    
+    # Clean up old output BEFORE starting generation to prevent old character models from appearing
+    from cleanup import cleanup
+    cleanup("output")
 
     try:
         # Check for test mode
@@ -34,7 +38,7 @@ def run_generation(story_prompt):
             generate_mock_story(story_prompt)
         else:
             # Pass the story_prompt to the generator
-            generate_story(story_prompt)
+            generate_story_main(story_prompt)
         
         generation_state["status"] = "Complete"
     except Exception as e:
@@ -115,18 +119,20 @@ def generate_story_api():
 def regenerate_page_endpoint():
     data = request.get_json()
     page_number = data.get('page_number')
+    fix_prompt = data.get('fix_prompt', '')
     
     if not page_number:
         return jsonify({"error": "Page number is required"}), 400
         
     try:
-        success = regenerate_page(page_number)
+        success = regenerate_page(page_number, fix_prompt=fix_prompt)
         if success:
             return jsonify({"status": "success", "message": f"Page {page_number} regenerated"})
         else:
             return jsonify({"error": "Failed to regenerate page"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/output/<path:filename>')
 def serve_output(filename):

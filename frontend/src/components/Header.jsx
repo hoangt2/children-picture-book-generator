@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useWizard } from '../contexts/WizardContext';
-import { Map, User, Users, Flag, Mountain, Star, CheckCircle } from 'lucide-react';
+import { Map, User, Users, Flag, Mountain, Palette, Star, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const steps = [
@@ -10,7 +10,8 @@ const steps = [
     { id: 3, icon: Users, label: 'step3' },
     { id: 4, icon: Flag, label: 'step4' },
     { id: 5, icon: Mountain, label: 'step5' },
-    { id: 6, icon: CheckCircle, label: 'step6' },
+    { id: 6, icon: Palette, label: 'step6' },
+    { id: 7, icon: CheckCircle, label: 'step7' },
 ];
 
 const Header = () => {

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useWizard } from '../contexts/WizardContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { motion, AnimatePresence } from 'framer-motion';
+import Lottie from 'lottie-react';
+import loadingAnimation from '../assets/loading-animation.json';
 import LivePreview from './LivePreview';
 
 import Step1Settings from './steps/Step1Settings';
@@ -9,7 +11,8 @@ import Step2Hero from './steps/Step2Hero';
 import Step3Sidekick from './steps/Step3Sidekick';
 import Step4Mission from './steps/Step4Mission';
 import Step5Setting from './steps/Step5Setting';
-import Step6Review from './steps/Step6Review';
+import Step6ArtStyle from './steps/Step6ArtStyle';
+import Step7Review from './steps/Step7Review';
 
 const Wizard = () => {
     const { currentStep, prevStep, nextStep, storyData, isGenerating, setIsGenerating, setGeneratedStory } = useWizard();
@@ -29,6 +32,7 @@ const Wizard = () => {
             'Generating story concept...': 'status_concept',
             'Generating character models...': 'status_character',
             'Creating character model...': 'status_character',
+            'Verifying all pages...': 'status_verifying',
             'Compiling PDF...': 'status_compiling',
             'Recompiling PDF...': 'status_compiling',
             'Complete': 'status_complete',
@@ -149,7 +153,7 @@ const Wizard = () => {
     };
 
     const handleNext = () => {
-        if (currentStep === 6) {
+        if (currentStep === 7) {
             handleCreateStory();
         } else {
             nextStep();
@@ -163,7 +167,8 @@ const Wizard = () => {
             case 3: return <Step3Sidekick />;
             case 4: return <Step4Mission />;
             case 5: return <Step5Setting />;
-            case 6: return <Step6Review />;
+            case 6: return <Step6ArtStyle />;
+            case 7: return <Step7Review />;
             default: return null;
         }
     };
@@ -171,20 +176,14 @@ const Wizard = () => {
     if (isGenerating) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[600px] w-full max-w-4xl mx-auto bg-white rounded-3xl shadow-magic p-10">
-                <div className="w-32 h-32 relative mb-8">
-                    <motion.div
-                        className="absolute inset-0 border-4 border-gray-100 rounded-full"
+                <div className="w-128 h-128 mb-4">
+                    <Lottie
+                        animationData={loadingAnimation}
+                        loop={true}
+                        autoplay={true}
                     />
-                    <motion.div
-                        className="absolute inset-0 border-4 border-magic-primary rounded-full border-t-transparent"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center text-4xl">
-                        ✨
-                    </div>
                 </div>
-                <h2 className="text-3xl font-bold text-magic-text mb-4 text-center animate-pulse">
+                <h2 className="text-3xl font-bold text-magic-text mb-4 text-center">
                     {t('creatingStory')}
                 </h2>
                 <p className="text-gray-500 text-center max-w-md text-lg">
@@ -230,8 +229,8 @@ const Wizard = () => {
                         onClick={handleNext}
                         className="px-8 py-3 rounded-xl font-bold bg-magic-primary text-white shadow-lg shadow-magic-primary/30 hover:scale-105 hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
                     >
-                        {currentStep === 6 ? t('createStoryBtn') : t('nextBtn')}
-                        {currentStep !== 6 && (
+                        {currentStep === 7 ? t('createStoryBtn') : t('nextBtn')}
+                        {currentStep !== 7 && (
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>

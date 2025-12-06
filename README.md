@@ -37,6 +37,63 @@ Create a `.env` file in the project root:
 GOOGLE_API_KEY=your_api_key_here
 ```
 
+## Frontend Development
+
+The web interface is built with React and Vite. There are **two ways** to run the frontend:
+
+### Option 1: Standalone Development (Recommended for Frontend Work)
+
+Use this when actively developing the frontend with hot-reload:
+
+1. Start the Flask backend:
+```bash
+python app.py
+```
+
+2. In a separate terminal, navigate to the frontend directory and start the dev server:
+```bash
+cd frontend
+npm run dev
+```
+
+3. Open `http://localhost:5173` in your browser
+
+The Vite dev server will automatically reload when you make changes, and proxy API requests to the Flask backend at `http://localhost:5001`.
+
+### Option 2: Flask Integration (Production-like)
+
+Use this to test the production build or when you're done with frontend changes:
+
+1. Navigate to the frontend directory and build:
+```bash
+cd frontend
+npm run build
+```
+
+2. Start the Flask backend:
+```bash
+cd ..
+python app.py
+```
+
+3. Open `http://localhost:5001` in your browser
+
+**Important**: After making frontend changes, you must rebuild (`npm run build`) for them to appear when running through Flask.
+
+### Initial Setup
+
+If you haven't installed dependencies yet:
+
+```bash
+cd frontend
+npm install
+```
+
+### Other Commands
+
+- **Lint code**: `npm run lint`
+- **Preview production build**: `npm run preview`
+
 ## Usage
 
 ### Web Interface (Recommended)

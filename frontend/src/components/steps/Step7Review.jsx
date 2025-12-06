@@ -3,7 +3,7 @@ import { useWizard } from '../../contexts/WizardContext';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Sparkles, User, Users, Target, MapPin, Palette } from 'lucide-react';
 
-const Step6Review = () => {
+const Step7Review = () => {
     const { storyData } = useWizard();
     const { t } = useTranslation();
 
@@ -112,4 +112,4 @@ const Step6Review = () => {
     );
 };
 
-export default Step6Review;
+export default Step7Review;
