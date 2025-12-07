@@ -218,6 +218,7 @@ CRITICAL - AVOID STIFF POSES:
 - Characters should interact with each other and their environment, not just stand there
 - Show characters FROM DIFFERENT ANGLES (not always front-facing)
 
+
 CRITICAL - BACKGROUND REQUIREMENTS:
 - NEVER use plain white or blank backgrounds
 - ALWAYS include a detailed, colorful background that matches the scene
@@ -225,6 +226,7 @@ CRITICAL - BACKGROUND REQUIREMENTS:
 - Use vibrant colors and rich details in the background
 - The background should tell part of the story and create atmosphere
 - Include depth with foreground, middle ground, and background elements
+- **FILL THE ENTIRE CANVAS** - the illustration should extend to all edges with NO white borders or margins
 
 CRITICAL - TEXT OVERLAY SPACE:
 - Leave ONE area of the image relatively simple/uniform for text overlay

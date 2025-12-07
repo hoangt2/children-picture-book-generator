@@ -108,6 +108,13 @@ def get_story_prompt(target_language, age, story_params):
     text_type = story_params.get('textType', 'story')
     text_amount = story_params.get('textAmount', 'few')
     
+    # Debug logging
+    print(f"\n{'='*60}")
+    print(f"TEXT GENERATION PARAMETERS:")
+    print(f"Text Type: {text_type}")
+    print(f"Text Amount: {text_amount}")
+    print(f"{'='*60}\n")
+    
 
     # Construct Hero Description
     hero_desc = ""
@@ -234,6 +241,7 @@ Your goal is to generate a heartwarming, simple, and engaging story.
 - **Characters:** Should reflect the culture of people who speak {target_language}, but strictly follow the configured Hero and Setting above.
 - **Names:** {"Use the hero name: " + hero_name if hero_name else f"Use culturally appropriate names for {target_language}."}
 - **CRITICAL for Vietnamese**: If {target_language} is Vietnamese, ALL names and words MUST use proper Vietnamese diacritics
+- **Secondary Characters (Friends, Family, etc.):** ALL secondary characters in the story should match the same ethnicity and cultural background as the hero. For example, if the hero is Vietnamese, all friends, family members, and other characters should also be Vietnamese with appropriate Vietnamese names and appearance.
 - **Setting:** Use the configured setting: {setting_prompt}
 - **Cultural Elements:** Include subtle cultural elements (food, traditions, clothing) when natural to the story.
 

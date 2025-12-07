@@ -181,9 +181,9 @@ def create_story_card(image_path, target_text, output_path):
     # Determine if this is a poem (has newlines) or normal text
     is_poem = '\n' in target_text and len(target_text.split('\n')) > 1
     
-    font_size = MAX_FONT_SIZE
+    font_size = 24  # Default to 24pt (picture book standard)
     temp_draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
-    max_allowed_width = int(TARGET_SIZE * 0.85)  # 85% of image width max
+    max_allowed_width = int(TARGET_SIZE * 0.65)  # 65% of image width for more balanced lines
     
     def wrap_text(text, font, max_width):
         """Wrap text to fit within max_width."""
