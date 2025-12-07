@@ -225,6 +225,13 @@ CRITICAL - BACKGROUND REQUIREMENTS:
 - Use vibrant colors and rich details in the background
 - The background should tell part of the story and create atmosphere
 - Include depth with foreground, middle ground, and background elements
+
+CRITICAL - TEXT OVERLAY SPACE:
+- Leave ONE area of the image relatively simple/uniform for text overlay
+- This can be at the TOP, BOTTOM, LEFT side, or RIGHT side - vary it between pages for visual interest
+- Use sky, grass, floor, wall, or soft gradient as the text area
+- Avoid placing important details or character faces in this text area
+- The main action and characters should leave room for text somewhere
 """
         full_prompt = f"{character_description} {prompt} {dynamic_scene_instructions} {prompts.IMAGE_STYLE_GUIDE}"
         

@@ -1,131 +1,300 @@
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
+import numpy as np
 import os
+import base64
+import io
+from google import genai
+
+# Initialize Gemini client
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+
+def get_ai_text_placement(image_path):
+    """
+    Uses Gemini Vision to analyze the image and find the optimal text placement.
+    Returns: (position_name, relative_coords) or (None, None) if failed.
+    """
+    try:
+        client = genai.Client(api_key=GOOGLE_API_KEY)
+        
+        # Load image as PIL Image
+        from PIL import Image as PILImage
+        pil_image = PILImage.open(image_path)
+        
+        # Create prompt for AI
+        prompt = """Analyze this children's book illustration and find the BEST location for a text box.
+
+Look for:
+1. Empty sky, solid color backgrounds, or uniform areas
+2. Areas WITHOUT important characters, faces, or key story elements
+3. Prefer: sky, simple backgrounds, grass without details, walls
+
+Return ONLY a single line in this exact format:
+POSITION: [top-left|top-center|top-right|middle-left|middle-right|bottom-left|bottom-center|bottom-right]
+
+Choose the position where text would be most readable and least obstructive to the illustration."""
+
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=[pil_image, prompt]
+        )
+        
+        result = response.text.strip().lower()
+        print(f"AI text placement response: {result}")
+        
+        # Parse response
+        position_map = {
+            'top-left': (0.22, 0.15),
+            'top-center': (0.5, 0.15),
+            'top-right': (0.78, 0.15),
+            'middle-left': (0.2, 0.5),
+            'middle-right': (0.8, 0.5),
+            'bottom-left': (0.22, 0.82),
+            'bottom-center': (0.5, 0.85),
+            'bottom-right': (0.78, 0.82),
+        }
+        
+        for key, coords in position_map.items():
+            if key in result:
+                return key, coords
+        
+        # Default to top-center if can't parse
+        return 'top-center', (0.5, 0.15)
+        
+    except Exception as e:
+        print(f"AI placement failed: {e}, using fallback")
+        return None, None
+
+
+def find_best_text_region_variance(img):
+    """
+    Fallback: Uses variance analysis to find uniform regions.
+    """
+    width, height = img.size
+    img_array = np.array(img.convert('RGB'))
+    
+    regions = {
+        'top-left': (int(width * 0.22), int(height * 0.15)),
+        'top-center': (int(width * 0.5), int(height * 0.15)),
+        'top-right': (int(width * 0.78), int(height * 0.15)),
+        'middle-left': (int(width * 0.2), int(height * 0.5)),
+        'middle-right': (int(width * 0.8), int(height * 0.5)),
+        'bottom-left': (int(width * 0.22), int(height * 0.82)),
+        'bottom-center': (int(width * 0.5), int(height * 0.85)),
+        'bottom-right': (int(width * 0.78), int(height * 0.82)),
+    }
+    
+    sample_size = int(width * 0.25)
+    best_position = 'top-center'
+    lowest_variance = float('inf')
+    
+    for position, (cx, cy) in regions.items():
+        x1 = max(0, cx - sample_size // 2)
+        y1 = max(0, cy - sample_size // 2)
+        x2 = min(width, cx + sample_size // 2)
+        y2 = min(height, cy + sample_size // 2)
+        
+        region = img_array[y1:y2, x1:x2, :]
+        variance = np.var(region)
+        
+        if variance < lowest_variance:
+            lowest_variance = variance
+            best_position = position
+    
+    cx, cy = regions[best_position]
+    return best_position, (cx / width, cy / height)
+
+
+def draw_rounded_rectangle(draw, xy, radius, fill):
+    """Draw a rounded rectangle."""
+    x1, y1, x2, y2 = xy
+    draw.rectangle([x1 + radius, y1, x2 - radius, y2], fill=fill)
+    draw.rectangle([x1, y1 + radius, x2, y2 - radius], fill=fill)
+    draw.ellipse([x1, y1, x1 + 2*radius, y1 + 2*radius], fill=fill)
+    draw.ellipse([x2 - 2*radius, y1, x2, y1 + 2*radius], fill=fill)
+    draw.ellipse([x1, y2 - 2*radius, x1 + 2*radius, y2], fill=fill)
+    draw.ellipse([x2 - 2*radius, y2 - 2*radius, x2, y2], fill=fill)
+
 
 def create_story_card(image_path, target_text, output_path):
     """
-    Composites a square image and text into a square card.
+    Creates a story card with AI-detected optimal text placement.
+    Text box is sized to avoid breaking poem lines.
     """
-    # Constants for square format
-    CANVAS_SIZE = 1080  # Square canvas
-    MARGIN = 50         # Margin around the edge
-    CONTENT_SIZE = CANVAS_SIZE - (2 * MARGIN)
+    TARGET_SIZE = 1080
+    BOX_PADDING = 25
+    CORNER_RADIUS = 20
+    OVERLAY_OPACITY = 160  # Reduced from 210 for more transparency
+    MIN_FONT_SIZE = 16  # Never go below 16pt for readability
+    MAX_FONT_SIZE = 24  # Sweet spot for picture books is 18-24pt
     
-    # Layout definition
-    IMAGE_HEIGHT = int(CONTENT_SIZE * 0.75)
-    TEXT_HEIGHT = CONTENT_SIZE - IMAGE_HEIGHT - 20 # 20px gap
-    
-    BG_COLOR = "#FFFFFF"
-    TEXT_COLOR = "#000000"
-    PADDING = 20
-    
-    # Create square canvas
-    canvas = Image.new("RGB", (CANVAS_SIZE, CANVAS_SIZE), BG_COLOR)
-    draw = ImageDraw.Draw(canvas)
-    
-    # Load and resize image to fill top portion within margins
+    # Load and resize image
     try:
-        img = Image.open(image_path)
+        img = Image.open(image_path).convert('RGBA')
         
-        # Resize to fit within the target area (CONTENT_SIZE x IMAGE_HEIGHT) without cropping
-        # Use ImageOps.contain logic manually or just calculate ratios
         img_ratio = img.width / img.height
-        target_ratio = CONTENT_SIZE / IMAGE_HEIGHT
-        
-        if img_ratio > target_ratio:
-            # Image is wider relative to target, fit to width
-            new_width = CONTENT_SIZE
-            new_height = int(CONTENT_SIZE / img_ratio)
+        if img_ratio > 1:
+            new_height = TARGET_SIZE
+            new_width = int(TARGET_SIZE * img_ratio)
         else:
-            # Image is taller relative to target, fit to height
-            new_height = IMAGE_HEIGHT
-            new_width = int(IMAGE_HEIGHT * img_ratio)
-            
+            new_width = TARGET_SIZE
+            new_height = int(TARGET_SIZE / img_ratio)
+        
         img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
         
-        # Calculate position to center the image
-        x_offset = MARGIN + (CONTENT_SIZE - new_width) // 2
-        y_offset = MARGIN + (IMAGE_HEIGHT - new_height) // 2
+        left = (new_width - TARGET_SIZE) // 2
+        top = (new_height - TARGET_SIZE) // 2
+        img = img.crop((left, top, left + TARGET_SIZE, top + TARGET_SIZE))
         
-        # Paste at calculated position
-        canvas.paste(img, (x_offset, y_offset))
     except Exception as e:
         print(f"Error loading image {image_path}: {e}")
-        return
-
+        return False
+    
+    # Try AI placement first, fallback to variance
+    position, rel_coords = get_ai_text_placement(image_path)
+    if rel_coords is None:
+        position, rel_coords = find_best_text_region_variance(img)
+    
+    cx = int(rel_coords[0] * TARGET_SIZE)
+    cy = int(rel_coords[1] * TARGET_SIZE)
+    print(f"Text placement: {position} at ({cx}, {cy})")
+    
     # Font setup
-    font_size = 55 # Slightly smaller to fit text area
     font = None
-
-    # Try to find a nice font
     font_candidates = [
         "fonts/Andika-Bold.ttf",
         "fonts/Andika-Regular.ttf",
-        "arialbd.ttf", 
-        "Arial Bold", 
         "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-        "/Library/Fonts/Arial Bold.ttf"
+        "/Library/Fonts/Arial Bold.ttf",
     ]
-
+    
     for font_name in font_candidates:
         try:
-            font = ImageFont.truetype(font_name, font_size)
+            font = ImageFont.truetype(font_name, MAX_FONT_SIZE)
             break
         except:
             continue
     if not font:
         font = ImageFont.load_default()
-
-    # Calculate text area
-    text_y_start = MARGIN + IMAGE_HEIGHT + 20 # Start below image with gap
-    max_width = CONTENT_SIZE - (2 * PADDING)
     
-    # Helper to wrap text and calculate height
-    def get_wrapped_text(text, font, max_width):
-        # First split on newlines to preserve poem structure
-        original_lines = text.split('\n')
-        wrapped_lines = []
-        for original_line in original_lines:
-            # Wrap each original line if it's too long
-            if original_line.strip():  # Skip empty lines
-                wrapped = textwrap.wrap(original_line, width=int(max_width / (font.size * 0.5)))
-                wrapped_lines.extend(wrapped if wrapped else [original_line])
+    # Determine if this is a poem (has newlines) or normal text
+    is_poem = '\n' in target_text and len(target_text.split('\n')) > 1
+    
+    font_size = MAX_FONT_SIZE
+    temp_draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+    max_allowed_width = int(TARGET_SIZE * 0.85)  # 85% of image width max
+    
+    def wrap_text(text, font, max_width):
+        """Wrap text to fit within max_width."""
+        words = text.split()
+        lines = []
+        current_line = []
+        
+        for word in words:
+            test_line = ' '.join(current_line + [word])
+            bbox = temp_draw.textbbox((0, 0), test_line, font=font)
+            if bbox[2] - bbox[0] <= max_width:
+                current_line.append(word)
             else:
-                wrapped_lines.append('')  # Preserve empty lines
-        return wrapped_lines
-
-    lines = get_wrapped_text(target_text, font, max_width)
+                if current_line:
+                    lines.append(' '.join(current_line))
+                current_line = [word]
+        
+        if current_line:
+            lines.append(' '.join(current_line))
+        
+        return lines
     
-    # Check if text fits, reduce font size if needed
-    while len(lines) * (font.size + 10) > TEXT_HEIGHT and font_size > 30:
-        font_size -= 5
-        try:
-            font = ImageFont.truetype(font.path, font_size)
-        except:
-            font = ImageFont.load_default()
-        lines = get_wrapped_text(target_text, font, max_width)
-
-    # Calculate total text height to center vertically in text area
-    total_text_height = len(lines) * (font.size + 10)
-    vertical_offset = (TEXT_HEIGHT - total_text_height) // 2
+    if is_poem:
+        # For poems: keep each line intact, reduce font if needed
+        lines = [line for line in target_text.split('\n') if line.strip()]
+        
+        while font_size >= MIN_FONT_SIZE:
+            try:
+                font = ImageFont.truetype(font.path, font_size)
+            except:
+                pass
+            
+            max_line_width = 0
+            for line in lines:
+                bbox = temp_draw.textbbox((0, 0), line, font=font)
+                max_line_width = max(max_line_width, bbox[2] - bbox[0])
+            
+            if max_line_width <= max_allowed_width:
+                break
+            font_size -= 2
+    else:
+        # For normal text: wrap to fit width
+        while font_size >= MIN_FONT_SIZE:
+            try:
+                font = ImageFont.truetype(font.path, font_size)
+            except:
+                pass
+            
+            lines = wrap_text(target_text, font, max_allowed_width)
+            
+            # Check if text fits vertically too
+            line_spacing = 8
+            total_height = len(lines) * (font_size + line_spacing)
+            max_allowed_height = int(TARGET_SIZE * 0.35)
+            
+            if total_height <= max_allowed_height:
+                break
+            font_size -= 2
     
-    current_y = text_y_start + vertical_offset
+    # Calculate box dimensions
+    line_spacing = 8
+    total_text_height = len(lines) * (font_size + line_spacing)
+    
+    max_line_width = 0
+    for line in lines:
+        bbox = temp_draw.textbbox((0, 0), line, font=font)
+        max_line_width = max(max_line_width, bbox[2] - bbox[0])
+    
+    box_width = max_line_width + (2 * BOX_PADDING)
+    box_height = total_text_height + (2 * BOX_PADDING)
+    
+    # Position box centered at detected location
+    box_x = cx - box_width // 2
+    box_y = cy - box_height // 2
+    
+    # Keep within bounds
+    margin = 20
+    box_x = max(margin, min(box_x, TARGET_SIZE - box_width - margin))
+    box_y = max(margin, min(box_y, TARGET_SIZE - box_height - margin))
+    
+    # Draw overlay
+    overlay = Image.new('RGBA', (TARGET_SIZE, TARGET_SIZE), (0, 0, 0, 0))
+    overlay_draw = ImageDraw.Draw(overlay)
+    
+    box_color = (255, 255, 255, OVERLAY_OPACITY)
+    draw_rounded_rectangle(
+        overlay_draw,
+        (box_x, box_y, box_x + box_width, box_y + box_height),
+        CORNER_RADIUS,
+        box_color
+    )
+    
+    img = Image.alpha_composite(img, overlay)
+    canvas = img.convert('RGB')
+    draw = ImageDraw.Draw(canvas)
+    
+    # Draw text
+    text_color = "#333333"
+    text_y = box_y + BOX_PADDING
     
     for line in lines:
-        if line.strip():  # Only draw non-empty lines
-            bbox = draw.textbbox((0, 0), line, font=font)
-            line_width = bbox[2] - bbox[0]
-            line_height = bbox[3] - bbox[1]
-            
-            # Center horizontally within margins
-            x = MARGIN + (CONTENT_SIZE - line_width) / 2
-            draw.text((x, current_y), line, font=font, fill=TEXT_COLOR)
-        current_y += font.size + 10
+        bbox = draw.textbbox((0, 0), line, font=font)
+        line_width = bbox[2] - bbox[0]
+        x = box_x + (box_width - line_width) // 2
+        draw.text((x, text_y), line, font=font, fill=text_color)
+        text_y += font_size + line_spacing
+    
+    canvas.save(output_path, quality=95)
+    print(f"Saved: {output_path} (text at {position}, font {font_size}px)")
+    return True
 
-    # Save
-    canvas.save(output_path)
-    print(f"Saved story card to {output_path}")
 
 if __name__ == "__main__":
-    # Test
-    create_story_card("test_image.png", "Tämä on testi.", "test_card.png")
+    create_story_card("test.png", "Dòng một\nDòng hai", "test_card.png")
