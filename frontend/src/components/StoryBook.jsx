@@ -236,13 +236,23 @@ const StoryBook = () => {
                                 exit={{ y: -20, opacity: 0 }}
                                 className="prose prose-lg max-w-none"
                             >
-                                <p className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-magic leading-relaxed text-magic-text text-center">
-                                    {pages[currentPage].text}
-                                </p>
+                                <div className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-magic leading-relaxed text-magic-text text-center">
+                                    {pages[currentPage].text?.split(/\\n|\n/).map((line, i) => (
+                                        <React.Fragment key={i}>
+                                            {line}
+                                            {i < pages[currentPage].text.split(/\\n|\n/).length - 1 && <br />}
+                                        </React.Fragment>
+                                    ))}
+                                </div>
                                 {pages[currentPage].text_vi && (
-                                    <p className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-magic leading-relaxed text-gray-500 mt-4 italic text-center">
-                                        {pages[currentPage].text_vi}
-                                    </p>
+                                    <div className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-magic leading-relaxed text-gray-500 mt-4 italic text-center">
+                                        {pages[currentPage].text_vi?.split(/\\n|\n/).map((line, i) => (
+                                            <React.Fragment key={i}>
+                                                {line}
+                                                {i < pages[currentPage].text_vi.split(/\\n|\n/).length - 1 && <br />}
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
                                 )}
                             </motion.div>
                         </AnimatePresence>

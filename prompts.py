@@ -105,6 +105,8 @@ def get_story_prompt(target_language, age, story_params):
     sidekick = story_params.get('sidekick', {})
     theme = story_params.get('theme', {})
     setting = story_params.get('setting', {})
+    text_type = story_params.get('textType', 'story')
+    text_amount = story_params.get('textAmount', 'few')
     
 
     # Construct Hero Description
@@ -155,12 +157,67 @@ def get_story_prompt(target_language, age, story_params):
     # Construct Theme/Setting
     theme_prompt = theme.get('prompt', 'a fun adventure') if theme else 'a fun adventure'
     setting_prompt = setting.get('prompt', 'a magical place') if setting else 'a magical place'
+    
+    # Text Type Instructions
+    text_type_instructions = ""
+    if text_type == 'poem':
+        text_type_instructions = f"""
+**TEXT TYPE: POEM/RHYME**
+- CRITICAL: Write ONLY in {target_language}. NO English words allowed!
+- CRITICAL: If {target_language} is Vietnamese, you MUST use proper Vietnamese diacritics (á, à, ả, ã, ạ, ă, ắ, ằ, ẳ, ẵ, ặ, â, ấ, ầ, ẩ, ẫ, ậ, đ, é, è, ẻ, ẽ, ẹ, ê, ế, ề, ể, ễ, ệ, í, ì, ỉ, ĩ, ị, ó, ò, ỏ, õ, ọ, ô, ố, ồ, ổ, ỗ, ộ, ơ, ớ, ờ, ở, ỡ, ợ, ú, ù, ủ, ũ, ụ, ư, ứ, ừ, ử, ữ, ự, ý, ỳ, ỷ, ỹ, ỵ) for ALL words including names!
+- Each page's text MUST rhyme and have a rhythmic pattern (like Vietnamese lục bát or song thất lục bát)
+- Use simple rhyming couplets or AABB rhyme scheme
+- Keep the rhythm consistent and easy to read aloud
+- Use repetition and musical language
+- **CRITICAL FORMATTING**: In the JSON, you MUST include actual newline characters in the text_target field
+- Put each line of the poem on a separate line using \\n (actual newline in JSON string)
+- Example JSON format: "text_target": "First line of poem\\nSecond line that rhymes\\nThird line continues\\nFourth line that rhymes"
+- When displayed, each line will appear on its own line like traditional Vietnamese poetry
+"""
+    else:
+        text_type_instructions = """
+**TEXT TYPE: STORY (PROSE)**
+- Use natural storytelling language
+- Simple narrative sentences
+- No forced rhyming
+"""
+    
+    # Text Amount Instructions
+    text_amount_instructions = ""
+    if text_amount == 'few':
+        text_amount_instructions = """
+**TEXT AMOUNT: FEW (Current style)**
+- Keep text very brief per page
+- 1-2 simple sentences maximum per page
+- Let the images do most of the storytelling
+"""
+    elif text_amount == 'medium':
+        text_amount_instructions = """
+**TEXT AMOUNT: MEDIUM**
+- 2-4 sentences per page
+- Add more descriptive details
+- Balance text and images
+- Include some character thoughts or feelings
+"""
+    else:  # more
+        text_amount_instructions = """
+**TEXT AMOUNT: MORE**
+- 4-6 sentences per page
+- Rich descriptions and details
+- Include dialogue when appropriate
+- Expand on character emotions and motivations
+- Create a more immersive reading experience
+"""
 
     return f"""
 You are a children's book author specializing in stories for young children in {target_language}.
 Your goal is to generate a heartwarming, simple, and engaging story.
 
 {constraints}
+
+{text_type_instructions}
+
+{text_amount_instructions}
 
 **STORY CONFIGURATION:**
 - Hero: {hero_desc}
@@ -175,7 +232,8 @@ Your goal is to generate a heartwarming, simple, and engaging story.
 
 **CULTURAL RELEVANCE (VERY IMPORTANT):**
 - **Characters:** Should reflect the culture of people who speak {target_language}, but strictly follow the configured Hero and Setting above.
-- **Names:** {"Use the hero name: " + hero_name if hero_name else "Use culturally appropriate names for the target language."}
+- **Names:** {"Use the hero name: " + hero_name if hero_name else f"Use culturally appropriate names for {target_language}."}
+- **CRITICAL for Vietnamese**: If {target_language} is Vietnamese, ALL names and words MUST use proper Vietnamese diacritics
 - **Setting:** Use the configured setting: {setting_prompt}
 - **Cultural Elements:** Include subtle cultural elements (food, traditions, clothing) when natural to the story.
 

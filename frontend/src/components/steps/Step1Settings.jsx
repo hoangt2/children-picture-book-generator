@@ -98,6 +98,91 @@ const Step1Settings = () => {
                 </div>
             </div>
 
+            {/* Text Type Selection */}
+            <div>
+                <label className="block text-lg font-bold text-magic-text mb-4">
+                    {t('textTypeTitle')}
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                        { id: 'story', icon: '📖', labelKey: 'textType_story', descKey: 'desc_story' },
+                        { id: 'poem', icon: '✨', labelKey: 'textType_poem', descKey: 'desc_poem' }
+                    ].map((type) => (
+                        <motion.button
+                            key={type.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => updateStoryData('textType', type.id)}
+                            className={`
+                                relative p-6 rounded-2xl border-2 text-left transition-all
+                                ${storyData.textType === type.id
+                                    ? 'border-magic-primary bg-magic-primary/5 ring-4 ring-magic-primary/20'
+                                    : 'border-gray-200 hover:border-magic-primary/50 hover:bg-gray-50'}
+                            `}
+                        >
+                            <div className="text-4xl mb-3">{type.icon}</div>
+                            <h3 className="text-xl font-bold text-magic-text mb-1">
+                                {t(type.labelKey)}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                                {t(type.descKey)}
+                            </p>
+
+                            {storyData.textType === type.id && (
+                                <div className="absolute top-4 right-4 w-6 h-6 bg-magic-primary rounded-full flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            )}
+                        </motion.button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Text Amount Selection */}
+            <div>
+                <label className="block text-lg font-bold text-magic-text mb-4">
+                    {t('textAmountTitle')}
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                        { id: 'few', icon: '📝', labelKey: 'textAmount_few', descKey: 'desc_few' },
+                        { id: 'medium', icon: '📄', labelKey: 'textAmount_medium', descKey: 'desc_medium' },
+                        { id: 'more', icon: '📚', labelKey: 'textAmount_more', descKey: 'desc_more' }
+                    ].map((amount) => (
+                        <motion.button
+                            key={amount.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => updateStoryData('textAmount', amount.id)}
+                            className={`
+                                relative p-6 rounded-2xl border-2 text-left transition-all
+                                ${storyData.textAmount === amount.id
+                                    ? 'border-magic-primary bg-magic-primary/5 ring-4 ring-magic-primary/20'
+                                    : 'border-gray-200 hover:border-magic-primary/50 hover:bg-gray-50'}
+                            `}
+                        >
+                            <div className="text-4xl mb-3">{amount.icon}</div>
+                            <h3 className="text-xl font-bold text-magic-text mb-1">
+                                {t(amount.labelKey)}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                                {t(amount.descKey)}
+                            </p>
+
+                            {storyData.textAmount === amount.id && (
+                                <div className="absolute top-4 right-4 w-6 h-6 bg-magic-primary rounded-full flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            )}
+                        </motion.button>
+                    ))}
+                </div>
+            </div>
+
             {/* Child's Age */}
             <div>
                 <label className="block text-lg font-bold text-magic-text mb-4">

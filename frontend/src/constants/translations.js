@@ -41,6 +41,22 @@ export const translations = {
         genre_realistic_desc: "Stories about family, school, and daily life.",
         genre_fantasy_desc: "Magical worlds, enchantment, and fantasy adventures.",
 
+        // Text Type Selection
+        textTypeTitle: "Text Style",
+        textType_story: "Story",
+        textType_poem: "Poem",
+        desc_story: "Traditional storytelling with prose",
+        desc_poem: "Rhyming and rhythmic text",
+
+        // Text Amount Selection
+        textAmountTitle: "Amount of Text",
+        textAmount_few: "Few Sentences",
+        textAmount_medium: "Medium",
+        textAmount_more: "More Text",
+        desc_few: "Simple, short sentences (current style)",
+        desc_medium: "Moderate amount of text per page",
+        desc_more: "More detailed descriptions",
+
         // Form Labels
         childAge: "Child's Age",
         heroName: "Character Name",
@@ -302,6 +318,22 @@ export const translations = {
         genre_fantasy: "Truyện Phép Thuật",
         genre_realistic_desc: "Câu chuyện về gia đình, trường lớp và cuộc sống hàng ngày.",
         genre_fantasy_desc: "Thế giới diệu kỳ, phép thuật và những chuyến phiêu lưu giả tưởng.",
+
+        // Text Type Selection
+        textTypeTitle: "Kiểu văn bản",
+        textType_story: "Truyện",
+        textType_poem: "Thơ",
+        desc_story: "Kể chuyện truyền thống bằng văn xuôi",
+        desc_poem: "Văn bản có vần điệu và nhịp điệu",
+
+        // Text Amount Selection
+        textAmountTitle: "Lượng văn bản",
+        textAmount_few: "Ít câu",
+        textAmount_medium: "Trung bình",
+        textAmount_more: "Nhiều văn bản",
+        desc_few: "Câu đơn giản, ngắn gọn",
+        desc_medium: "Lượng văn bản vừa phải mỗi trang",
+        desc_more: "Mô tả chi tiết hơn",
 
         // Form Labels
         childAge: "Tuổi của bé",

@@ -82,7 +82,17 @@ def create_story_card(image_path, target_text, output_path):
     
     # Helper to wrap text and calculate height
     def get_wrapped_text(text, font, max_width):
-        return textwrap.wrap(text, width=int(max_width / (font.size * 0.5)))
+        # First split on newlines to preserve poem structure
+        original_lines = text.split('\n')
+        wrapped_lines = []
+        for original_line in original_lines:
+            # Wrap each original line if it's too long
+            if original_line.strip():  # Skip empty lines
+                wrapped = textwrap.wrap(original_line, width=int(max_width / (font.size * 0.5)))
+                wrapped_lines.extend(wrapped if wrapped else [original_line])
+            else:
+                wrapped_lines.append('')  # Preserve empty lines
+        return wrapped_lines
 
     lines = get_wrapped_text(target_text, font, max_width)
     
@@ -102,13 +112,14 @@ def create_story_card(image_path, target_text, output_path):
     current_y = text_y_start + vertical_offset
     
     for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        line_width = bbox[2] - bbox[0]
-        line_height = bbox[3] - bbox[1]
-        
-        # Center horizontally within margins
-        x = MARGIN + (CONTENT_SIZE - line_width) / 2
-        draw.text((x, current_y), line, font=font, fill=TEXT_COLOR)
+        if line.strip():  # Only draw non-empty lines
+            bbox = draw.textbbox((0, 0), line, font=font)
+            line_width = bbox[2] - bbox[0]
+            line_height = bbox[3] - bbox[1]
+            
+            # Center horizontally within margins
+            x = MARGIN + (CONTENT_SIZE - line_width) / 2
+            draw.text((x, current_y), line, font=font, fill=TEXT_COLOR)
         current_y += font.size + 10
 
     # Save

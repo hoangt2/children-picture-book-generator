@@ -11,6 +11,8 @@ export const WizardProvider = ({ children }) => {
         childName: '',
         language: 'vi',
         storyGenre: 'realistic',
+        textType: 'story',
+        textAmount: 'few',
         test_mode: false,
         hero: {
             type: 'human',
