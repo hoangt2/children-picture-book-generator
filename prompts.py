@@ -25,15 +25,15 @@ IMPORTANT REQUIREMENTS:
 def get_age_constraints(age):
     """
     Determines age-appropriate constraints for story generation.
+    NOTE: Sentence count/length is controlled by text_amount setting, not age.
+    Age only affects vocabulary complexity and themes.
     """
     if age <= 1:
         constraints = """
 **AGE:** 0-1 years old (Babies)
 **LANGUAGE COMPLEXITY:**
-- Single words only (e.g., "Ball", "Cat", "Mama")
-- 1 word per sentence
+- Simple vocabulary (mama, dada, ball, cat, dog)
 - Present tense only
-- Very basic vocabulary (mama, dada, ball, cat, dog)
 - Heavy repetition
 **THEMES:** Sounds, textures, colors, basic objects
 """
@@ -41,10 +41,8 @@ def get_age_constraints(age):
         constraints = """
 **AGE:** 2-3 years old (Toddlers)
 **LANGUAGE COMPLEXITY:**
-- Very simple, 2-3 word phrases
-- 2-3 words per sentence maximum
+- Simple vocabulary (animals, colors, family, simple objects)
 - Present tense only
-- Basic vocabulary (animals, colors, family, simple objects)
 - Heavy repetition of patterns
 **THEMES:** Daily routines, simple actions, colors, shapes, peek-a-boo
 """
@@ -52,10 +50,8 @@ def get_age_constraints(age):
         constraints = """
 **AGE:** 4-5 years old (Preschool)
 **LANGUAGE COMPLEXITY:**
-- Simple sentences
-- 3-5 words per sentence
-- Present tense primarily
 - Basic vocabulary (animals, colors, family, everyday objects)
+- Present tense primarily
 - Repetitive patterns
 **THEMES:** Friendship, sharing, emotions, daily routines
 """
@@ -63,10 +59,8 @@ def get_age_constraints(age):
         constraints = """
 **AGE:** 6-7 years old (Early Elementary)
 **LANGUAGE COMPLEXITY:**
-- Simple sentences with some variety
-- 5-7 words per sentence
-- Present and simple past tense
 - Expanded vocabulary (nature, school, activities)
+- Present and simple past tense
 - Some descriptive words
 **THEMES:** School, friendship, problem-solving, adventure
 """
@@ -74,10 +68,8 @@ def get_age_constraints(age):
         constraints = """
 **AGE:** 8-9 years old (Elementary)
 **LANGUAGE COMPLEXITY:**
-- Varied sentence structures
-- 6-9 words per sentence
-- Multiple tenses (past, present)
 - Broader vocabulary (hobbies, emotions, nature)
+- Multiple tenses (past, present)
 - Descriptive language
 **THEMES:** Adventure, challenges, teamwork, nature exploration
 """
@@ -85,10 +77,8 @@ def get_age_constraints(age):
         constraints = """
 **AGE:** 10-12 years old (Pre-teen)
 **LANGUAGE COMPLEXITY:**
-- Complex sentences with compound structures
-- 8-12 words per sentence
-- All tenses (past, present, future)
 - Rich vocabulary including abstract concepts
+- All tenses (past, present, future)
 - Dialogue and descriptive language
 **THEMES:** Personal growth, independence, moral lessons, imagination
 """
@@ -184,8 +174,10 @@ def get_story_prompt(target_language, age, story_params):
     else:
         text_type_instructions = """
 **TEXT TYPE: STORY (PROSE)**
-- Use natural storytelling language
-- Simple narrative sentences
+- Use rich, engaging storytelling language
+- Varied sentence structures for interest
+- Include descriptive details and sensory language
+- Show character emotions and reactions
 - No forced rhyming
 """
     
@@ -193,30 +185,43 @@ def get_story_prompt(target_language, age, story_params):
     text_amount_instructions = ""
     if text_amount == 'few':
         text_amount_instructions = """
-**TEXT AMOUNT: FEW (Current style)**
-- Keep text very brief per page
-- 1-2 simple sentences maximum per page
-- Let the images do most of the storytelling
+**TEXT AMOUNT: FEW**
+- MUST have MINIMUM 2-3 complete sentences per page
+- Include descriptive details and character emotions
+- Balance text with images
+- Use engaging, age-appropriate vocabulary
+- EACH page MUST meet this minimum requirement
 """
     elif text_amount == 'medium':
         text_amount_instructions = """
 **TEXT AMOUNT: MEDIUM**
-- 2-4 sentences per page
-- Add more descriptive details
-- Balance text and images
-- Include some character thoughts or feelings
+- MUST have MINIMUM 3-5 complete sentences per page
+- Rich descriptive details and sensory language
+- Include character thoughts, feelings, and dialogue
+- Create engaging narrative flow
+- Add depth to scenes and relationships
+- CRITICAL: Count your sentences - NEVER use fewer than 3 per page
 """
     else:  # more
         text_amount_instructions = """
-**TEXT AMOUNT: MORE**
-- 4-6 sentences per page
-- Rich descriptions and details
-- Include dialogue when appropriate
-- Expand on character emotions and motivations
-- Create a more immersive reading experience
+**TEXT AMOUNT: MORE** ⚠️ CRITICAL - USER REQUESTED MAXIMUM TEXT ⚠️
+- MUST have MINIMUM 5-8 complete sentences per page
+- THIS IS A STRICT REQUIREMENT - Do NOT use 1-2 sentences!
+- Detailed, vivid descriptions of scenes and characters
+- Include meaningful dialogue and interactions
+- Explore character emotions, motivations, and growth
+- Add layers to the story with subplots or themes
+- Create an immersive, emotionally engaging reading experience
+- EXAMPLE for reference: "An loves helping mom cook. Today, the whole family will make spring rolls together. Mom shows An how to prepare the vegetables carefully. An carefully washes each leaf of lettuce. She arranges the ingredients on the table proudly. Dad smiles, watching his daughter work so diligently. Together, they create delicious food and warm memories."
+- Count your sentences! If you write fewer than 5, you failed the requirement.
 """
 
     return f"""
+⚠️⚠️⚠️ CRITICAL PRIORITY REQUIREMENT ⚠️⚠️⚠️
+{text_amount_instructions}
+THIS IS THE #1 PRIORITY - MORE IMPORTANT THAN ANY OTHER INSTRUCTION BELOW!
+========================================
+
 You are a children's book author specializing in stories for young children in {target_language}.
 Your goal is to generate a heartwarming, simple, and engaging story.
 
@@ -224,6 +229,7 @@ Your goal is to generate a heartwarming, simple, and engaging story.
 
 {text_type_instructions}
 
+REMINDER - TEXT AMOUNT REQUIREMENT (DO NOT FORGET):
 {text_amount_instructions}
 
 **STORY CONFIGURATION:**
@@ -241,12 +247,22 @@ Your goal is to generate a heartwarming, simple, and engaging story.
 - **Characters:** Should reflect the culture of people who speak {target_language}, but strictly follow the configured Hero and Setting above.
 - **Names:** {"Use the hero name: " + hero_name if hero_name else f"Use culturally appropriate names for {target_language}."}
 - **CRITICAL for Vietnamese**: If {target_language} is Vietnamese, ALL names and words MUST use proper Vietnamese diacritics
-- **Secondary Characters (Friends, Family, etc.):** ALL secondary characters in the story should match the same ethnicity and cultural background as the hero. For example, if the hero is Vietnamese, all friends, family members, and other characters should also be Vietnamese with appropriate Vietnamese names and appearance.
+- **Secondary Characters (Friends, Family, etc.):** ALL secondary characters in the story should match the same ethnicity and cultural background as the hero. However, they MUST be visually distinct:
+  * **Different hairstyles:** If hero has short straight hair, friends should have different styles (longer hair, wavy, tied up, different cuts)
+  * **Different facial features:** Vary face shapes, eye shapes, nose, expression characteristics between characters
+  * **Different clothing:** Each character wears different colored outfits (if hero wears yellow, friends wear blue, red, green, pink, etc.)
+  * Example: Hero has short black straight hair → Friend 1 has longer wavy hair, Friend 2 has hair tied in ponytail, Friend 3 has slightly longer straight hair with bangs
+  * AVOID making all children look like copies/clones with just different shirts
 - **Setting:** Use the configured setting: {setting_prompt}
 - **Cultural Elements:** Include subtle cultural elements (food, traditions, clothing) when natural to the story.
+- **Vietnamese Language Usage:** If writing in Vietnamese:
+  * When children talk to/about other children, use: names directly, "bạn ấy" (friend), "cậu ấy"/"cô ấy" (informal he/she), or "em" (younger friend)
+  * NEVER use "ông" (grandfather/old man) or "cô" (aunt/teacher) when referring to children
+  * Example CORRECT: "Bình nhìn thấy Mai" or "bạn ấy đang chơi"
+  * Example WRONG: "ông nhìn thấy cô ấy" (this is for adults/elders only)
 
 **STRUCTURE:**
-- **Length:** Exactly 8 pages.
+- **Length:** Exactly 10 pages.
 - **Format:** Return ONLY a valid JSON object.
 
 **CRITICAL INSTRUCTION: CHARACTER DEFINITION**
@@ -324,19 +340,36 @@ Your goal is to generate a heartwarming, simple, and engaging story.
       "description": "Detailed visual description (age, appearance, clothing, distinguishing features)"
     }}
   ],
+  "locations": [
+    {{
+      "id": "location_id",
+      "name": "Location Name (e.g., Grandpa's Bedroom, Kitchen, Park)",
+      "description": "Detailed visual description: wall colors, furniture, decorations, layout, lighting. Be VERY specific for consistency.",
+      "appears_in_pages": [2, 5, 7]
+    }}
+  ],
   "pages": [
     {{
       "page_number": 1,
       "type": "cover",
+      "location_id": "location_id or null",
       "text_target": "Title of the story in {{target_language}}",
       "image_description": "Visual description for the cover. Hero: {hero_desc}. Setting: {setting_prompt}. INCLUDE FULL CHARACTER DETAILS."
     }},
     {{
       "page_number": 2,
       "type": "story",
+      "location_id": "location_id or null",  
       "text_target": "Story text in {{target_language}}",
       "image_description": "Scene description. Include FULL visual details of ALL characters in this scene. Hero: {hero_desc}. Setting: {setting_prompt}. Action: [describe what's happening]."
     }}
   ]
 }}
+
+**CRITICAL - LOCATION CONSISTENCY:**
+- If a location (bedroom, kitchen, park, etc.) appears in 2+ pages, add it to the "locations" array
+- Give each location a unique ID (e.g., "grandpa_bedroom", "home_kitchen", "neighborhood_park")
+- Provide a DETAILED description: wall colors, furniture type and color, decorations, flooring, window style, etc.
+- In each page's "location_id" field, reference the location ID if the page takes place there
+- For outdoor or one-time locations, use null for location_id
 """

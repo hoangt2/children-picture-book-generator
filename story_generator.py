@@ -218,6 +218,14 @@ CRITICAL - AVOID STIFF POSES:
 - Characters should interact with each other and their environment, not just stand there
 - Show characters FROM DIFFERENT ANGLES (not always front-facing)
 
+CRITICAL - PREVENT CHARACTER DUPLICATION (VERY IMPORTANT):
+- NEVER create multiple copies of the same character
+- Each character in the scene MUST look completely different from others
+- If there are multiple children: give each one DIFFERENT clothing colors/styles from the hero
+- Example: If hero wears yellow, other children should wear blue, red, green, pink - NOT yellow
+- Each character must have unique features: different hair, different outfit, different accessories
+- ABSOLUTELY FORBIDDEN: Drawing 2+ identical characters or clones
+- Secondary characters MUST be visually distinct from the main hero
 
 CRITICAL - BACKGROUND REQUIREMENTS:
 - NEVER use plain white or blank backgrounds
@@ -227,6 +235,20 @@ CRITICAL - BACKGROUND REQUIREMENTS:
 - The background should tell part of the story and create atmosphere
 - Include depth with foreground, middle ground, and background elements
 - **FILL THE ENTIRE CANVAS** - the illustration should extend to all edges with NO white borders or margins
+
+CRITICAL - OBJECT CONSISTENCY:
+- If a character carries/uses a specific object (lantern, toy, kite, ball, etc.) across multiple pages, that object MUST look identical every time
+- Example: If a character has a DRAGON LANTERN on page 3, that SAME dragon lantern (same colors, same design, same pattern) must appear on pages 5, 6, 7, 8
+- Pay attention to: color, shape, pattern, size, design details
+- Important story objects should be recognizable - they're like visual characters in the story
+
+CRITICAL - TIME OF DAY CONSISTENCY:
+- Pay attention to when the story takes place (morning, afternoon, evening, night)
+- If the story is at NIGHT or EVENING: EVERY page must show night/evening lighting with dark sky, moon/stars, lit lanterns
+- If the story is in DAYTIME: EVERY page must show daylight with bright sky and sun
+- Example: "Đêm Trung Thu" (Mid-Autumn Festival Night) = ALL pages must be at NIGHT with full moon visible
+- Maintain consistent lighting throughout the entire story - don't switch from day to night randomly
+- The sky color and lighting should match the time indicated in the story text
 
 CRITICAL - TEXT OVERLAY SPACE:
 - Leave ONE area of the image relatively simple/uniform for text overlay
@@ -356,6 +378,33 @@ def process_story(story, output_dir="output", status_callback=None):
     all_char_desc = " ".join([c.get("description", "") for c in characters])
     all_model_paths = list(character_models.values())
 
+    # 2.6 Prepare for Location Consistency
+    log("Processing locations for consistency...")
+    locations = story.get("locations", [])
+    location_info = {}  # Map location_id -> {description, first_page_image}
+    
+    log(f"Found {len(locations)} locations in story JSON")
+    
+    for location in locations:
+        location_id = location.get("id", "")
+        location_name = location.get("name", "Unknown Location")
+        location_desc = location.get("description", "")
+        appears_in = location.get("appears_in_pages", [])
+        
+        log(f"Location: {location_name}, ID: {location_id}, appears in {len(appears_in)} pages")
+        
+        # Store info for locations appearing 2+ times
+        if len(appears_in) >= 2 and location_desc:
+            location_info[location_id] = {
+                "name": location_name,
+                "description": location_desc,
+                "pages": appears_in,
+                "first_image": None  # Will be set when first page is generated
+            }
+            log(f"✓ Will track consistency for: {location_name}")
+
+
+
     # 3. Process Pages
     for page in story.get("pages", []):
         page_num = page.get("page_number")
@@ -367,9 +416,63 @@ def process_story(story, output_dir="output", status_callback=None):
         final_filename = f"story_card_{page_num}.png"
         final_path = os.path.join(dirs["cards"], final_filename)
 
+        # Check if this page has a location
+        location_id = page.get("location_id")
+        location_desc_addition = ""
+        location_reference_image = None
+        
+        if location_id and location_id in location_info:
+            loc = location_info[location_id]
+            
+            # If this is the first page for this location, we'll generate without reference
+            # Otherwise, use the first page as reference
+            if loc["first_image"] is not None:
+                location_reference_image = loc["first_image"]
+                location_desc_addition = f"""
+
+LOCATION CONSISTENCY - Same location, different angle:
+Location: {loc['name']}
+Details: {loc['description']}
+
+REFERENCE IMAGE USAGE:
+✅ MAINTAIN EXACTLY from reference: 
+   - Color palette
+   - Architectural style  
+   - Specific decorative elements (lanterns COLOR and PATTERN, decorations, signs, specific objects)
+   - Key features (trees, buildings, furniture, playground equipment)
+✅ You can show this location from a DIFFERENT CAMERA ANGLE (overhead, side view, close-up, wide shot)
+✅ Keep the same environment and ALL decorative details, but adjust the perspective
+❌ DO NOT copy the characters from the reference - create completely NEW characters for this scene
+❌ Each scene should have UNIQUE characters with DIFFERENT clothing colors and poses
+
+Example: If the reference shows colorful lanterns (red, blue, orange), keep those EXACT SAME lantern colors and patterns in every scene at this location."""
+                log(f"Page {page_num} uses location reference from page {loc['pages'][0]}")
+            else:
+                # First page for this location - include detailed description
+                location_desc_addition = f"""
+
+LOCATION SETUP - This is {loc['name']}:
+{loc['description']}
+This location will appear again, so maintain consistency with these details."""
+                log(f"Page {page_num} is FIRST page for location: {loc['name']}")
+
         # Generate Image (without text)
-        full_prompt = f"{page.get('image_description')}"
-        success = generate_image(full_prompt, image_path, character_description=all_char_desc, reference_image_paths=all_model_paths)
+        full_prompt = f"{page.get('image_description')}{location_desc_addition}"
+        
+        # Add location reference image if available
+        reference_paths = all_model_paths.copy()
+        if location_reference_image:
+            reference_paths.append(location_reference_image)
+        
+        success = generate_image(full_prompt, image_path, character_description=all_char_desc, reference_image_paths=reference_paths)
+        
+        # If this is the first page for a location, save it as reference
+        if success and location_id and location_id in location_info:
+            loc = location_info[location_id]
+            if loc["first_image"] is None:
+                loc["first_image"] = image_path
+                log(f"✓ Saved {loc['name']} reference from page {page_num}")
+
         
         if success:
             # Create square card with text composited below image
@@ -377,6 +480,7 @@ def process_story(story, output_dir="output", status_callback=None):
         
         # Sleep to avoid rate limits
         time.sleep(2)
+
 
     # 3.5 Verify and Retry Missing Pages
     log("Verifying all pages were created...")
@@ -545,6 +649,30 @@ def regenerate_page(page_number, output_dir="output", fix_prompt=""):
         model_path = os.path.join(dirs["images"], f"character_model_{safe_name}.png")
         if os.path.exists(model_path):
             all_model_paths.append(model_path)
+    
+    
+    # Store location descriptions
+    locations = story.get("locations", [])
+    location_descriptions = {}
+    for location in locations:
+        location_id = location.get("id", "")
+        location_descriptions[location_id] = {
+            "name": location.get("name", ""),
+            "description": location.get("description", "")
+        }
+            
+    # Check if this page uses a location
+    location_id = target_page.get("location_id")
+    location_desc_addition = ""
+    if location_id and location_id in location_descriptions:
+        loc_info = location_descriptions[location_id]
+        location_desc_addition = f"""
+
+LOCATION CONSISTENCY - This scene takes place in: {loc_info['name']}
+CRITICAL: Maintain these EXACT location details:
+{loc_info['description']}
+- Keep the same wall colors, furniture, and layout
+- Only change the camera angle and character positions"""
             
     # Regenerate Image
     update_status(f"Generating new image for page {page_number}...")
@@ -554,8 +682,15 @@ def regenerate_page(page_number, output_dir="output", fix_prompt=""):
     final_path = os.path.join(dirs["cards"], final_filename)
     
     # Build the prompt with optional fix instructions
-    base_prompt = target_page.get('image_description')
+    base_prompt = target_page.get('image_description') + location_desc_addition
     if fix_prompt:
+        print(f"\n{'='*80}")
+        print(f"REGENERATION WITH FIX PROMPT")
+        print(f"{'='*80}")
+        print(f"User fix request: {fix_prompt}")
+        print(f"Base prompt: {base_prompt[:200]}...")
+        print(f"{'='*80}\n")
+        
         full_prompt = f"""{base_prompt}
 
 CRITICAL - USER REQUESTED MODIFICATION (Keep everything else EXACTLY the same):
@@ -566,11 +701,17 @@ The user wants to make a SMALL, SPECIFIC change to this image. This is like phot
 - ONLY change what the user specifically requested: {fix_prompt}
 - Everything else should remain as close to the original as possible
 - This is a MINOR EDIT, not a complete regeneration"""
+        
+        print(f"FULL REGENERATION PROMPT:")
+        print(f"{full_prompt}")
+        print(f"\n{'='*80}\n")
     else:
         full_prompt = base_prompt
     
     # Use existing generate_image function
     success = generate_image(full_prompt, image_path, character_description=all_char_desc, reference_image_paths=all_model_paths)
+
+
     
     if success:
         # Create story card

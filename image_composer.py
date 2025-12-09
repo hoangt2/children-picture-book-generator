@@ -25,15 +25,29 @@ def get_ai_text_placement(image_path):
         # Create prompt for AI
         prompt = """Analyze this children's book illustration and find the BEST location for a text box.
 
-Look for:
-1. Empty sky, solid color backgrounds, or uniform areas
-2. Areas WITHOUT important characters, faces, or key story elements
-3. Prefer: sky, simple backgrounds, grass without details, walls
+⚠️ CRITICAL PRIORITY: DO NOT cover important objects! ⚠️
 
-Return ONLY a single line in this exact format:
+AVOID placing text over:
+- Characters (people, animals)
+- Important objects (toys, kites, balloons, food, etc.)
+- Character faces or hands
+- Key story elements mentioned in the illustration
+
+PREFER placing text in:
+1. Empty sky or clouds (TOP positions usually best)
+2. Plain grass or ground (BOTTOM positions)
+3. Solid color walls or backgrounds (SIDE positions)
+4. Any area with NO important visual elements
+
+Return TWO lines in this exact format:
 POSITION: [top-left|top-center|top-right|middle-left|middle-right|bottom-left|bottom-center|bottom-right]
+SPACE: [small|medium|large]
 
-Choose the position where text would be most readable and least obstructive to the illustration."""
+- SMALL: Limited empty area, keep text box narrow (30-40% width)
+- MEDIUM: Moderate empty area, medium text box (45-55% width)
+- LARGE: Lots of empty area, wider text box okay (60-70% width)
+
+Choose the position where text would be most readable and LEAST obstructive to important visual elements."""
 
         response = client.models.generate_content(
             model="gemini-2.0-flash",
@@ -43,7 +57,20 @@ Choose the position where text would be most readable and least obstructive to t
         result = response.text.strip().lower()
         print(f"AI text placement response: {result}")
         
-        # Parse response
+        # Parse response for position and space
+        position_name = None
+        space_size = 'medium'  # default
+        
+        # Extract space size
+        if 'space:' in result:
+            if 'small' in result:
+                space_size = 'small'
+            elif 'large' in result:
+                space_size = 'large'
+            else:
+                space_size = 'medium'
+        
+        # Parse position
         position_map = {
             'top-left': (0.22, 0.15),
             'top-center': (0.5, 0.15),
@@ -57,14 +84,16 @@ Choose the position where text would be most readable and least obstructive to t
         
         for key, coords in position_map.items():
             if key in result:
-                return key, coords
+                position_name = key
+                print(f"Detected position: {position_name}, space: {space_size}")
+                return position_name, coords, space_size
         
         # Default to top-center if can't parse
-        return 'top-center', (0.5, 0.15)
+        return 'top-center', (0.5, 0.15), space_size
         
     except Exception as e:
         print(f"AI placement failed: {e}, using fallback")
-        return None, None
+        return None, None, 'medium'
 
 
 def find_best_text_region_variance(img):
@@ -103,7 +132,7 @@ def find_best_text_region_variance(img):
             best_position = position
     
     cx, cy = regions[best_position]
-    return best_position, (cx / width, cy / height)
+    return best_position, (cx / width, cy / height), 'medium'  # Return medium as default space
 
 
 def draw_rounded_rectangle(draw, xy, radius, fill):
@@ -152,9 +181,9 @@ def create_story_card(image_path, target_text, output_path):
         return False
     
     # Try AI placement first, fallback to variance
-    position, rel_coords = get_ai_text_placement(image_path)
+    position, rel_coords, space_size = get_ai_text_placement(image_path)
     if rel_coords is None:
-        position, rel_coords = find_best_text_region_variance(img)
+        position, rel_coords, space_size = find_best_text_region_variance(img)
     
     cx = int(rel_coords[0] * TARGET_SIZE)
     cy = int(rel_coords[1] * TARGET_SIZE)
@@ -183,7 +212,15 @@ def create_story_card(image_path, target_text, output_path):
     
     font_size = 24  # Default to 24pt (picture book standard)
     temp_draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
-    max_allowed_width = int(TARGET_SIZE * 0.65)  # 65% of image width for more balanced lines
+    
+    # Adaptive width based on available space
+    width_ratios = {
+        'small': 0.35,   # 35% for limited space
+        'medium': 0.50,  # 50% for moderate space  
+        'large': 0.65    # 65% for lots of space
+    }
+    max_allowed_width = int(TARGET_SIZE * width_ratios.get(space_size, 0.50))
+    print(f"Text box width: {space_size} space = {width_ratios.get(space_size, 0.50)*100}% of image")
     
     def wrap_text(text, font, max_width):
         """Wrap text to fit within max_width."""

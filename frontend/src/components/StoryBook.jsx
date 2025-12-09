@@ -204,6 +204,30 @@ const StoryBook = () => {
                     {/* Regenerate Section */}
                     <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
                         <div className="flex flex-col gap-2">
+                            {/* Quick Fix Presets */}
+                            <div className="flex gap-2 mb-1">
+                                <button
+                                    onClick={() => {
+                                        setFixPrompt("Remove any text or letters visible in the image");
+                                        setTimeout(() => handleRegenerate(pages[currentPage].page_number), 100);
+                                    }}
+                                    disabled={isRegenerating}
+                                    className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    🚫 Remove Text
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setFixPrompt("Remove duplicated characters - show only ONE instance of each character");
+                                        setTimeout(() => handleRegenerate(pages[currentPage].page_number), 100);
+                                    }}
+                                    disabled={isRegenerating}
+                                    className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    👥 Remove Duplicates
+                                </button>
+                            </div>
+
                             <input
                                 type="text"
                                 value={fixPrompt}
